@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/food_model.dart';
 import '../../../core/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/cart_provider.dart';
 
 class FoodDetailScreen extends StatefulWidget {
   final FoodModel food;
@@ -188,8 +190,24 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            // TODO: Thêm vào giỏ hàng (Sprint sau)
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã thêm vào giỏ hàng")));
+                            // 1. Gọi CartProvider để lưu món ăn
+                            context.read<CartProvider>().addToCart(
+                              widget.food, 
+                              quantity: _quantity, 
+                              note: _noteController.text.isNotEmpty ? _noteController.text : null,
+                            );
+
+                            // 2. Báo thành công
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Đã thêm vào giỏ hàng!"),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 1),
+                              )
+                            );
+
+                            // 3. Tự động quay lại Trang chủ sau khi thêm xong
+                            Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.bronzeGold,

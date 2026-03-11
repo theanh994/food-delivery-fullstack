@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/food_provider.dart';
+import '../../../providers/cart_provider.dart';
 import '../widgets/food_card.dart';
 import '../widgets/shimmer_loading.dart';
 import 'food_detail_screen.dart';
@@ -131,6 +132,52 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           ],
         ),
       ),
+
+      floatingActionButton: Consumer<CartProvider>(
+        builder: (context, cart, child) {
+          // Nếu giỏ hàng trống thì không hiện nút
+          if (cart.items.isEmpty) return const SizedBox.shrink();
+
+          return FloatingActionButton.extended(
+            backgroundColor: AppTheme.darkPurple,
+            onPressed: () => Navigator.pushNamed(context, '/cart'),
+            elevation: 10,
+            label: Row(
+              children: [
+                // Hình tròn nhỏ hiển thị số lượng món
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.bronzeGold,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    "${cart.totalItems}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Hiển thị tổng tiền tạm tính
+                Text(
+                  "Xem giỏ hàng • ${cart.subtotal.toInt()}đ",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            icon: const Icon(Icons.shopping_bag, color: AppTheme.bronzeGold),
+          );
+        },
+      ),
+      // Căn lề nút nằm ở chính giữa phía dưới màn hình
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
