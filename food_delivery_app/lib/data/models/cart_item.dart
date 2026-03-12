@@ -1,4 +1,5 @@
 class CartItem {
+  final String uniqueId; // Tạo ra từ foodId + itemNote
   final int foodId;
   final String name;
   final double price;
@@ -7,6 +8,7 @@ class CartItem {
   String? itemNote; // Ghi chú riêng cho món (VD: Ít hành)
 
   CartItem({
+    required this.uniqueId,
     required this.foodId,
     required this.name,
     required this.price,

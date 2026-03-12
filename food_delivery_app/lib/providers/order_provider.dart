@@ -28,7 +28,7 @@ class OrderProvider with ChangeNotifier {
           "final_amount": cart.totalAmount,
           "delivery_address": address,
           "order_note": note,
-          "items": cart.items.values.map((item) => {
+          "items": cart.items.map((item) => {
             "food_id": item.foodId,
             "quantity": item.quantity,
             "unit_price": item.price,

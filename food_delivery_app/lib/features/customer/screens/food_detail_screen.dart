@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../data/models/food_model.dart';
 import '../../../core/theme/app_theme.dart';
-import 'package:provider/provider.dart';
 import '../../../providers/cart_provider.dart';
 
 class FoodDetailScreen extends StatefulWidget {
@@ -15,8 +15,12 @@ class FoodDetailScreen extends StatefulWidget {
 class _FoodDetailScreenState extends State<FoodDetailScreen> {
   int _quantity = 1;
   String _selectedSize = 'M';
-  String _selectedIce = '50%';
-  String _selectedSugar = '50%';
+  
+  // Tách biệt các biến tùy chọn
+  String _selectedIce = '50%';      // Chỉ dùng cho drink
+  String _selectedSugar = '50%';    // Chỉ dùng cho drink
+  String _selectedSpiciness = 'Không cay'; // Chỉ dùng cho food
+  
   final TextEditingController _noteController = TextEditingController();
 
   @override
@@ -25,7 +29,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       backgroundColor: AppTheme.ivoryWhite,
       body: Stack(
         children: [
-          // 1. Toàn bộ nội dung cuộn được
+          // 1. Nội dung cuộn
           SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,15 +50,18 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                         ),
                       ),
                     ),
-                    // Nút Back & Share
+                    // NÚT QUAY LẠI (Back Button) - Hiển thị rõ ràng trên ảnh
                     SafeArea(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _circleButton(Icons.arrow_back, () => Navigator.pop(context)),
-                            const Text("EPICURE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2)),
+                            _circleButton(Icons.arrow_back, () {
+                              Navigator.pop(context); // Thoát mà không thêm vào giỏ
+                            }),
+                            const Text("EPICURE", 
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2, shadows: [Shadow(blurRadius: 10, color: Colors.black)])),
                             _circleButton(Icons.share, () {}),
                           ],
                         ),
@@ -63,7 +70,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   ],
                 ),
 
-                // Nội dung chi tiết
                 Transform.translate(
                   offset: const Offset(0, -30),
                   child: Container(
@@ -76,72 +82,53 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Tên & Giá
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Text(widget.food.name, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                            ),
-                            Text("\$${widget.food.price}", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.darkPurple)),
+                            Expanded(child: Text(widget.food.name, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold))),
+                            Text("${widget.food.price.toInt()}đ", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.darkPurple)),
                           ],
                         ),
-                        
-                        // Rating (Mẫu)
-                        const SizedBox(height: 8),
-                        Row(
-                          children: List.generate(5, (index) => Icon(Icons.star, size: 16, color: index < 4 ? AppTheme.bronzeGold : Colors.grey)),
-                        ),
-                        
-                        // Mô tả
                         const SizedBox(height: 20),
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(
-                            border: Border(left: BorderSide(color: AppTheme.bronzeGold, width: 3)),
-                          ),
+                          decoration: const BoxDecoration(border: Border(left: BorderSide(color: AppTheme.bronzeGold, width: 3))),
                           child: Text(widget.food.description, style: const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
                         ),
 
                         const SizedBox(height: 30),
-
-                        // Chọn Size
-                        _sectionTitle("Chọn Size"),
+                        _sectionTitle("CHỌN KÍCH CỠ (SIZE)"),
                         Row(
                           children: [
-                            _optionCard("M", "Regular", _selectedSize == 'M', () => setState(() => _selectedSize = 'M')),
+                            _optionCard("M", "Vừa", _selectedSize == 'M', () => setState(() => _selectedSize = 'M')),
                             const SizedBox(width: 15),
-                            _optionCard("L", "Large (+\$2)", _selectedSize == 'L', () => setState(() => _selectedSize = 'L')),
+                            _optionCard("L", "Lớn (+5.000đ)", _selectedSize == 'L', () => setState(() => _selectedSize = 'L')),
                           ],
                         ),
 
-                        const SizedBox(height: 25),
-
-                        // 1. Kiểm tra nếu là Đồ uống (drink)
+                        // --- LOGIC HIỂN THỊ TÙY CHỌN RIÊNG BIỆT ---
                         if (widget.food.foodType.trim() == 'drink') ...[
                           const SizedBox(height: 25),
-                          _sectionTitle("ICE LEVEL"),
+                          _sectionTitle("MỨC ĐÁ"),
                           Row(
                             children: ['0%', '50%', '100%'].map((ice) => _chipOption(ice, _selectedIce == ice, () => setState(() => _selectedIce = ice))).toList(),
                           ),
                           const SizedBox(height: 25),
-                          _sectionTitle("SUGAR LEVEL"),
+                          _sectionTitle("MỨC ĐƯỜNG"),
                           Row(
                             children: ['0%', '25%', '50%', '100%'].map((sugar) => _chipOption(sugar, _selectedSugar == sugar, () => setState(() => _selectedSugar = sugar))).toList(),
                           ),
-                        ] 
-                        // 2. Ngược lại nếu là Đồ ăn (food)
-                        else if (widget.food.foodType.trim() == 'food') ...[
+                        ] else if (widget.food.foodType.trim() == 'food') ...[
                           const SizedBox(height: 25),
-                          _sectionTitle("SPICINESS (MỨC ĐỘ CAY)"),
+                          _sectionTitle("MỨC ĐỘ CAY"),
                           Row(
                             children: ['Không cay', 'Cay vừa', 'Rất cay'].map((level) => 
-                              _chipOption(level, _selectedIce == level, () => setState(() => _selectedIce = level))
+                              _chipOption(level, _selectedSpiciness == level, () => setState(() => _selectedSpiciness = level))
                             ).toList(),
                           ),
                         ],
 
-                        const SizedBox(height: 150), // Khoảng trống cho Bottom Bar
+                        const SizedBox(height: 180), 
                       ],
                     ),
                   ),
@@ -150,14 +137,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             ),
           ),
 
-          // 2. Bottom Persistent Bar (Nút Add to Cart)
+          // 2. Bottom Bar
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                color: Colors.white,
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -165,7 +152,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   TextField(
                     controller: _noteController,
                     decoration: InputDecoration(
-                      hintText: "Ghi chú đặc biệt cho quán...",
+                      hintText: "Ghi chú thêm (VD: Không hành...)",
                       filled: true,
                       fillColor: Colors.grey[100],
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -174,7 +161,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      // Bộ chọn số lượng
                       Container(
                         decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
                         child: Row(
@@ -186,35 +172,41 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                         ),
                       ),
                       const SizedBox(width: 20),
-                      // Nút Add to Cart
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            // 1. Gọi CartProvider để lưu món ăn
+                            // --- LOGIC GHÉP CHUỖI GHI CHÚ CHUẨN ---
+                            String fullOptions = "Size: $_selectedSize";
+                            
+                            if (widget.food.foodType.trim() == 'drink') {
+                              fullOptions += ", $_selectedIce Đá, $_selectedSugar Đường";
+                            } else if (widget.food.foodType.trim() == 'food') {
+                              fullOptions += ", $_selectedSpiciness";
+                            }
+
+                            if (_noteController.text.isNotEmpty) {
+                              fullOptions += " (${_noteController.text})";
+                            }
+
+                            // Thêm vào giỏ
                             context.read<CartProvider>().addToCart(
                               widget.food, 
                               quantity: _quantity, 
-                              note: _noteController.text.isNotEmpty ? _noteController.text : null,
+                              note: fullOptions,
                             );
 
-                            // 2. Báo thành công
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Đã thêm vào giỏ hàng!"),
-                                backgroundColor: Colors.green,
-                                duration: Duration(seconds: 1),
-                              )
+                              const SnackBar(content: Text("Đã thêm vào giỏ hàng!"), backgroundColor: Colors.green)
                             );
-
-                            // 3. Tự động quay lại Trang chủ sau khi thêm xong
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.bronzeGold,
+                            backgroundColor: AppTheme.darkPurple,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: Text("Thêm vào giỏ hàng • \$${widget.food.price * _quantity}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          child: Text("Thêm vào giỏ • ${(widget.food.price * _quantity).toInt()}đ", 
+                            style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -233,7 +225,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     onTap: onTap,
     child: Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.3), shape: BoxShape.circle),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.3), shape: BoxShape.circle),
       child: Icon(icon, color: Colors.white),
     ),
   );
@@ -251,7 +243,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         decoration: BoxDecoration(
           border: Border.all(color: isSelected ? AppTheme.bronzeGold : Colors.grey.shade300, width: 2),
           borderRadius: BorderRadius.circular(15),
-          color: isSelected ? AppTheme.bronzeGold.withValues(alpha: 0.05) : Colors.transparent,
+          color: isSelected ? AppTheme.bronzeGold.withOpacity(0.05) : Colors.transparent,
         ),
         child: Column(
           children: [
