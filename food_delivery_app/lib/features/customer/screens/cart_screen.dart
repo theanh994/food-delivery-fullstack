@@ -5,6 +5,8 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/order_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/cart_item.dart';
+import '../widgets/edit_cart_item_sheet.dart';
+import '../../../providers/food_provider.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -83,42 +85,86 @@ class _CartScreenState extends State<CartScreen> {
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
-        children:[
+        crossAxisAlignment: CrossAxisAlignment.start, // Căn trên để nút Edit đẹp hơn
+        children: [
+          // 1. Ảnh món ăn
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.network(item.imageUrl, width: 70, height: 70, fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: Colors.grey[200], width: 70, height: 70, child: const Icon(Icons.fastfood, color: Colors.grey))),
+            child: Image.network(
+              item.imageUrl, 
+              width: 70, height: 70, 
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(color: Colors.grey[200], width: 70, height: 70, child: const Icon(Icons.fastfood, color: Colors.grey)),
+            ),
           ),
           const SizedBox(width: 12),
           
+          // 2. Nội dung thông tin
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children:[
-                Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              children: [
+                // --- DÒNG TÊN MÓN & NÚT SỬA ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(item.name, 
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    ),
+                    
+                    // NÚT SỬA ĐƠN HÀNG (Mới thêm)
+                    GestureDetector(
+                      onTap: () {
+                        // Lấy FoodModel gốc từ FoodProvider để biết món này có những options nào
+                        final food = context.read<FoodProvider>().foods.firstWhere((f) => f.id == item.foodId);
+                        
+                        // Hiển thị BottomSheet chỉnh sửa
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true, // Cho phép vuốt nếu nội dung dài
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => EditCartItemSheet(cartItem: item, food: food),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.bronzeGold.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.edit_note, color: AppTheme.bronzeGold, size: 20),
+                      ),
+                    ),
+                  ],
+                ),
                 
-                // HIỂN THỊ DYNAMIC OPTIONS
+                // Hiển thị các Options đã chọn
                 if (item.selectedOptions.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       item.selectedOptions.map((e) => "${e.groupName}: ${e.selectedItems.join(', ')}").join('\n'),
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic),
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600], fontStyle: FontStyle.italic),
                     ),
                   ),
 
-                // HIỂN THỊ GHI CHÚ BẰNG TAY (Đã sửa thành item.note)
+                // Hiển thị Ghi chú bằng tay
                 if (item.note != null && item.note!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text("Ghi chú: ${item.note!}", style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text("Ghi chú: ${item.note!}", 
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500])),
                   ),
                   
                 const SizedBox(height: 8),
+                
+                // --- DÒNG GIÁ TIỀN & BỘ TĂNG GIẢM ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children:[
-                    Text("${item.totalItemPrice.toInt()}đ", style: const TextStyle(color: AppTheme.darkPurple, fontWeight: FontWeight.bold)),
+                  children: [
+                    Text("${item.totalItemPrice.toInt()}đ", 
+                      style: const TextStyle(color: AppTheme.darkPurple, fontWeight: FontWeight.bold)),
                     
                     Container(
                       decoration: BoxDecoration(
@@ -127,15 +173,20 @@ class _CartScreenState extends State<CartScreen> {
                         border: Border.all(color: Colors.grey.shade300)
                       ),
                       child: Row(
-                        children:[
+                        children: [
                           IconButton(
                             onPressed: () => cart.decrementQuantity(item.uniqueId), 
-                            icon: const Icon(Icons.remove, size: 16, color: AppTheme.darkPurple)
+                            icon: const Icon(Icons.remove, size: 16, color: AppTheme.darkPurple),
+                            padding: EdgeInsets.zero, constraints: const BoxConstraints(),
                           ),
-                          Text("${item.quantity}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text("${item.quantity}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ),
                           IconButton(
                             onPressed: () => cart.incrementQuantity(item.uniqueId), 
-                            icon: const Icon(Icons.add, size: 16, color: AppTheme.darkPurple)
+                            icon: const Icon(Icons.add, size: 16, color: AppTheme.darkPurple),
+                            padding: EdgeInsets.zero, constraints: const BoxConstraints(),
                           ),
                         ],
                       ),

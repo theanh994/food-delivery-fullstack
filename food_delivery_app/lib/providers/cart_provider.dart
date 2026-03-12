@@ -42,6 +42,28 @@ class CartProvider with ChangeNotifier {
     }
   }
 
+  void updateCartItem(String oldUniqueId, CartItem newItem) {
+  // 1. Tìm vị trí món cũ
+  int index = _items.indexWhere((item) => item.uniqueId == oldUniqueId);
+  
+  if (index >= 0) {
+    // 2. Xóa món cũ
+    _items.removeAt(index);
+    
+    // 3. Kiểm tra xem món mới sau khi sửa có bị TRÙNG với một món khác đã có trong giỏ không
+    int duplicateIndex = _items.indexWhere((item) => item.uniqueId == newItem.uniqueId);
+    
+    if (duplicateIndex >= 0) {
+      // Nếu trùng -> Gộp số lượng vào món đã có
+      _items[duplicateIndex].quantity += newItem.quantity;
+    } else {
+      // Nếu không trùng -> Chèn món mới vào đúng vị trí cũ để giữ thứ tự giỏ hàng
+      _items.insert(index, newItem);
+    }
+    notifyListeners();
+  }
+}
+
   void decrementQuantity(String uniqueId) {
     int index = _items.indexWhere((item) => item.uniqueId == uniqueId);
     if (index >= 0) {
