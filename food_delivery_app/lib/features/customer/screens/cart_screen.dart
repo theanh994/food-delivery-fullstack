@@ -4,7 +4,7 @@ import '../../../providers/cart_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/order_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../data/models/cart_item.dart'; // Thêm dòng này để fix lỗi Undefined class
+import '../../../data/models/cart_item.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -33,18 +33,18 @@ class _CartScreenState extends State<CartScreen> {
       body: cart.items.isEmpty
           ? _buildEmptyCart()
           : Column(
-              children: [
+              children:[
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children:[
                         const Text("Sản phẩm đã chọn", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 16),
                         
                         // Danh sách món ăn
-                        ...cart.items.map((item) => _buildCartItem(item, cart)).toList(),
+                        ...cart.items.map((item) => _buildCartItem(item, cart)),
 
                         const SizedBox(height: 24),
                         _buildSectionHeader(Icons.location_on, "Địa chỉ giao hàng"),
@@ -83,48 +83,43 @@ class _CartScreenState extends State<CartScreen> {
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
-        children: [
-          // Ảnh món ăn
+        children:[
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.network(item.imageUrl, width: 70, height: 70, fit: BoxFit.cover),
+            child: Image.network(item.imageUrl, width: 70, height: 70, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(color: Colors.grey[200], width: 70, height: 70, child: const Icon(Icons.fastfood, color: Colors.grey))),
           ),
           const SizedBox(width: 12),
           
-          // Thông tin món
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name, 
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)
-                ),
+              children:[
+                Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 
-                // HIỂN THỊ TÙY CHỌN/GHI CHÚ TẠI ĐÂY
-                if (item.itemNote != null && item.itemNote!.isNotEmpty)
+                // HIỂN THỊ DYNAMIC OPTIONS
+                if (item.selectedOptions.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      item.itemNote!,
-                      style: TextStyle(
-                        fontSize: 12, 
-                        color: Colors.grey[600], 
-                        fontStyle: FontStyle.italic
-                      ),
+                      item.selectedOptions.map((e) => "${e.groupName}: ${e.selectedItems.join(', ')}").join('\n'),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic),
                     ),
+                  ),
+
+                // HIỂN THỊ GHI CHÚ BẰNG TAY (Đã sửa thành item.note)
+                if (item.note != null && item.note!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text("Ghi chú: ${item.note!}", style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
                   ),
                   
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "${item.price.toInt()}đ", 
-                      style: const TextStyle(color: AppTheme.darkPurple, fontWeight: FontWeight.bold)
-                    ),
+                  children:[
+                    Text("${item.totalItemPrice.toInt()}đ", style: const TextStyle(color: AppTheme.darkPurple, fontWeight: FontWeight.bold)),
                     
-                    // Bộ tăng giảm số lượng (Truyền uniqueId)
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white, 
@@ -132,7 +127,7 @@ class _CartScreenState extends State<CartScreen> {
                         border: Border.all(color: Colors.grey.shade300)
                       ),
                       child: Row(
-                        children: [
+                        children:[
                           IconButton(
                             onPressed: () => cart.decrementQuantity(item.uniqueId), 
                             icon: const Icon(Icons.remove, size: 16, color: AppTheme.darkPurple)
@@ -155,12 +150,12 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildSummary(cart) {
+  Widget _buildSummary(CartProvider cart) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(15)),
       child: Column(
-        children: [
+        children:[
           _summaryRow("Tạm tính", "${cart.subtotal.toInt()}đ"),
           _summaryRow("Phí giao hàng", "${cart.shippingFee.toInt()}đ"),
           const Divider(),
@@ -170,7 +165,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildBottomCTA(cart, auth, orderProv) {
+  Widget _buildBottomCTA(CartProvider cart, AuthProvider auth, OrderProvider orderProv) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Colors.grey, width: 0.1))),
@@ -194,25 +189,27 @@ class _CartScreenState extends State<CartScreen> {
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.darkPurple, minimumSize: const Size(double.infinity, 56)),
           child: orderProv.isPlacingOrder 
             ? const CircularProgressIndicator(color: Colors.white)
-            : Text("Đặt hàng ngay • ${cart.totalAmount.toInt()}đ"),
+            : Text("Đặt hàng ngay • ${cart.totalAmount.toInt()}đ", style: const TextStyle(color: AppTheme.bronzeGold, fontSize: 16, fontWeight: FontWeight.bold)),
         ),
       ),
     );
   }
 
-  // --- Helper Widgets ---
   Widget _buildEmptyCart() => const Center(child: Text("Giỏ hàng trống"));
+  
   Widget _buildSectionHeader(IconData icon, String title) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
-    child: Row(children: [Icon(icon, size: 18, color: AppTheme.darkPurple), const SizedBox(width: 8), Text(title, style: const TextStyle(fontWeight: FontWeight.bold))]),
+    child: Row(children:[Icon(icon, size: 18, color: AppTheme.darkPurple), const SizedBox(width: 8), Text(title, style: const TextStyle(fontWeight: FontWeight.bold))]),
   );
+  
   InputDecoration _inputStyle(String hint) => InputDecoration(
     hintText: hint, filled: true, fillColor: Colors.grey[50],
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
   );
+  
   Widget _summaryRow(String label, String value, {bool isTotal = false}) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children:[
       Text(label, style: TextStyle(fontWeight: isTotal ? FontWeight.bold : FontWeight.normal, fontSize: isTotal ? 18 : 14)),
       Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: isTotal ? 20 : 14, color: isTotal ? AppTheme.darkPurple : Colors.black)),
     ]),
@@ -225,8 +222,8 @@ class _CartScreenState extends State<CartScreen> {
       builder: (context) => AlertDialog(
         title: const Icon(Icons.check_circle, color: Colors.green, size: 60),
         content: const Text("Đặt hàng thành công! Đơn hàng của bạn đang được xử lý.", textAlign: TextAlign.center),
-        actions: [TextButton(onPressed: () {
-          Navigator.pop(context); // Đóng dialog
+        actions:[TextButton(onPressed: () {
+          Navigator.pop(context); 
           Navigator.pushReplacementNamed(context, '/customer_home');
         }, child: const Text("OK"))],
       ),

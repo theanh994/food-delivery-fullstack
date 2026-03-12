@@ -3,46 +3,37 @@ import '../data/models/cart_item.dart';
 import '../data/models/food_model.dart';
 
 class CartProvider with ChangeNotifier {
-  // Chuyển sang dùng List để chứa các item riêng biệt
-  List<CartItem> _items = [];
-
+  List<CartItem> _items =[];
   List<CartItem> get items => _items;
 
   int get totalItems => _items.fold(0, (sum, item) => sum + item.quantity);
 
-  double get subtotal => _items.fold(0, (sum, item) => sum + (item.price * item.quantity));
-  
-  double get shippingFee => 15000.0;
-  
-  double get totalAmount => subtotal + shippingFee;
+  // ĐÃ SỬA: Khai báo đúng 5 tham số
+  void addToCart(FoodModel food, double totalPrice, List<SelectedOption> selections, int quantity, String? note) {
+    selections.sort((a, b) => a.groupName.compareTo(b.groupName));
+    String optionsKey = selections.map((e) => e.toString()).join('|');
+    String uniqueId = "${food.id}|$optionsKey|${note ?? ''}";
 
-  void addToCart(FoodModel food, {int quantity = 1, String? note}) {
-    // note bây giờ đã là "Size: L, 50% Đá..." nên uniqueId sẽ khác nhau giữa các Size hoặc giữa các ghi chú khác nhau
-    String noteKey = note ?? "no-note";
-    String uniqueId = "${food.id}-$noteKey";
-
-    // Kiểm tra xem đã có item nào TRÙNG cả ID và TRÙNG cả Ghi chú chưa
     int existingIndex = _items.indexWhere((item) => item.uniqueId == uniqueId);
 
     if (existingIndex >= 0) {
-      // Nếu trùng hoàn toàn -> Chỉ tăng số lượng
       _items[existingIndex].quantity += quantity;
     } else {
-      // Nếu khác ghi chú (hoặc món mới) -> Thêm dòng mới vào List
       _items.add(CartItem(
         uniqueId: uniqueId,
         foodId: food.id,
         name: food.name,
-        price: food.price,
+        basePrice: food.price,
+        totalItemPrice: totalPrice,
+        selectedOptions: selections,
         imageUrl: food.imageUrl ?? '',
         quantity: quantity,
-        itemNote: note,
+        note: note,
       ));
     }
     notifyListeners();
   }
 
-  // Tăng/Giảm dựa trên uniqueId thay vì foodId
   void incrementQuantity(String uniqueId) {
     int index = _items.indexWhere((item) => item.uniqueId == uniqueId);
     if (index >= 0) {
@@ -63,8 +54,12 @@ class CartProvider with ChangeNotifier {
     }
   }
 
+  double get subtotal => _items.fold(0, (sum, item) => sum + (item.totalItemPrice * item.quantity));
+  double get shippingFee => 15000.0;
+  double get totalAmount => subtotal + shippingFee;
+
   void clearCart() {
-    _items = [];
+    _items =[];
     notifyListeners();
   }
 }

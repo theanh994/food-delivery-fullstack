@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../data/models/food_model.dart';
+import '../../../data/models/cart_item.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/cart_provider.dart';
 
@@ -14,255 +15,276 @@ class FoodDetailScreen extends StatefulWidget {
 
 class _FoodDetailScreenState extends State<FoodDetailScreen> {
   int _quantity = 1;
-  String _selectedSize = 'M';
-  
-  // Tách biệt các biến tùy chọn
-  String _selectedIce = '50%';      // Chỉ dùng cho drink
-  String _selectedSugar = '50%';    // Chỉ dùng cho drink
-  String _selectedSpiciness = 'Không cay'; // Chỉ dùng cho food
-  
   final TextEditingController _noteController = TextEditingController();
+
+  // 1. KHO LƯU TRỮ LỰA CHỌN: { "Tên nhóm": ["Lựa chọn A", "Lựa chọn B"] }
+  final Map<String, List<String>> _userSelections = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeDefaultOptions();
+  }
+
+  // Tự động chọn option đầu tiên nếu nhóm đó là Bắt buộc (Required)
+  void _initializeDefaultOptions() {
+    for (var group in widget.food.optionGroups) {
+      if (group.isRequired && group.options.isNotEmpty) {
+        _userSelections[group.name] = [group.options[0].name];
+      } else {
+        _userSelections[group.name] = [];
+      }
+    }
+  }
+
+  // 2. LOGIC TÍNH GIÁ DỰA TRÊN OPTION ĐANG CHỌN
+  double _calculateCurrentPrice() {
+    double total = widget.food.price;
+    for (var group in widget.food.optionGroups) {
+      final selectedNames = _userSelections[group.name] ?? [];
+      for (var selectedName in selectedNames) {
+        // Tìm item trong group để lấy extraPrice
+        final optionItem = group.options.firstWhere((item) => item.name == selectedName);
+        total += optionItem.extraPrice;
+      }
+    }
+    return total;
+  }
 
   @override
   Widget build(BuildContext context) {
+    double totalPrice = _calculateCurrentPrice();
+
     return Scaffold(
       backgroundColor: AppTheme.ivoryWhite,
       body: Stack(
         children: [
-          // 1. Nội dung cuộn
+          // --- PHẦN NỘI DUNG CUỘN ---
           SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image Hero Section
-                Stack(
-                  children: [
-                    Hero(
-                      tag: 'food-${widget.food.id}',
-                      child: Container(
-                        height: 350,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(widget.food.imageUrl ?? ''),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // NÚT QUAY LẠI (Back Button) - Hiển thị rõ ràng trên ảnh
-                    SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _circleButton(Icons.arrow_back, () {
-                              Navigator.pop(context); // Thoát mà không thêm vào giỏ
-                            }),
-                            const Text("EPICURE", 
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2, shadows: [Shadow(blurRadius: 10, color: Colors.black)])),
-                            _circleButton(Icons.share, () {}),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                Transform.translate(
-                  offset: const Offset(0, -30),
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.ivoryWhite,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                    ),
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(child: Text(widget.food.name, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold))),
-                            Text("${widget.food.price.toInt()}đ", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.darkPurple)),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(border: Border(left: BorderSide(color: AppTheme.bronzeGold, width: 3))),
-                          child: Text(widget.food.description, style: const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
-                        ),
-
-                        const SizedBox(height: 30),
-                        _sectionTitle("CHỌN KÍCH CỠ (SIZE)"),
-                        Row(
-                          children: [
-                            _optionCard("M", "Vừa", _selectedSize == 'M', () => setState(() => _selectedSize = 'M')),
-                            const SizedBox(width: 15),
-                            _optionCard("L", "Lớn (+5.000đ)", _selectedSize == 'L', () => setState(() => _selectedSize = 'L')),
-                          ],
-                        ),
-
-                        // --- LOGIC HIỂN THỊ TÙY CHỌN RIÊNG BIỆT ---
-                        if (widget.food.foodType.trim() == 'drink') ...[
-                          const SizedBox(height: 25),
-                          _sectionTitle("MỨC ĐÁ"),
-                          Row(
-                            children: ['0%', '50%', '100%'].map((ice) => _chipOption(ice, _selectedIce == ice, () => setState(() => _selectedIce = ice))).toList(),
-                          ),
-                          const SizedBox(height: 25),
-                          _sectionTitle("MỨC ĐƯỜNG"),
-                          Row(
-                            children: ['0%', '25%', '50%', '100%'].map((sugar) => _chipOption(sugar, _selectedSugar == sugar, () => setState(() => _selectedSugar = sugar))).toList(),
-                          ),
-                        ] else if (widget.food.foodType.trim() == 'food') ...[
-                          const SizedBox(height: 25),
-                          _sectionTitle("MỨC ĐỘ CAY"),
-                          Row(
-                            children: ['Không cay', 'Cay vừa', 'Rất cay'].map((level) => 
-                              _chipOption(level, _selectedSpiciness == level, () => setState(() => _selectedSpiciness = level))
-                            ).toList(),
-                          ),
-                        ],
-
-                        const SizedBox(height: 180), 
-                      ],
-                    ),
+                _buildHeaderImage(),
+                _buildFoodInfo(totalPrice),
+                
+                // --- PHẦN RENDER TÙY CHỌN ĐỘNG (DYNAMIC OPTIONS) ---
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: widget.food.optionGroups.map((group) {
+                      return _buildOptionGroup(group);
+                    }).toList(),
                   ),
                 ),
+                
+                const SizedBox(height: 200), // Khoảng trống cho Bottom Bar
               ],
             ),
           ),
 
-          // 2. Bottom Bar
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _noteController,
-                    decoration: InputDecoration(
-                      hintText: "Ghi chú thêm (VD: Không hành...)",
-                      filled: true,
-                      fillColor: Colors.grey[100],
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                        child: Row(
-                          children: [
-                            IconButton(onPressed: () => setState(() => _quantity > 1 ? _quantity-- : null), icon: const Icon(Icons.remove)),
-                            Text("$_quantity", style: const TextStyle(fontWeight: FontWeight.bold)),
-                            IconButton(onPressed: () => setState(() => _quantity++), icon: const Icon(Icons.add)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // --- LOGIC GHÉP CHUỖI GHI CHÚ CHUẨN ---
-                            String fullOptions = "Size: $_selectedSize";
-                            
-                            if (widget.food.foodType.trim() == 'drink') {
-                              fullOptions += ", $_selectedIce Đá, $_selectedSugar Đường";
-                            } else if (widget.food.foodType.trim() == 'food') {
-                              fullOptions += ", $_selectedSpiciness";
-                            }
-
-                            if (_noteController.text.isNotEmpty) {
-                              fullOptions += " (${_noteController.text})";
-                            }
-
-                            // Thêm vào giỏ
-                            context.read<CartProvider>().addToCart(
-                              widget.food, 
-                              quantity: _quantity, 
-                              note: fullOptions,
-                            );
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Đã thêm vào giỏ hàng!"), backgroundColor: Colors.green)
-                            );
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.darkPurple,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text("Thêm vào giỏ • ${(widget.food.price * _quantity).toInt()}đ", 
-                            style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          // --- NÚT QUAY LẠI (BACK BUTTON) ---
+          Positioned(
+            top: 40,
+            left: 20,
+            child: _circleButton(Icons.arrow_back, () => Navigator.pop(context)),
           ),
+
+          // --- BOTTOM BAR: SỐ LƯỢNG & THÊM VÀO GIỎ ---
+          _buildBottomBar(totalPrice),
         ],
       ),
     );
   }
 
-  // Helper Widgets
-  Widget _circleButton(IconData icon, VoidCallback onTap) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: Colors.black.withOpacity(0.3), shape: BoxShape.circle),
-      child: Icon(icon, color: Colors.white),
-    ),
-  );
-
-  Widget _sectionTitle(String title) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2)),
-  );
-
-  Widget _optionCard(String title, String sub, bool isSelected, VoidCallback onTap) => Expanded(
-    child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: isSelected ? AppTheme.bronzeGold : Colors.grey.shade300, width: 2),
-          borderRadius: BorderRadius.circular(15),
-          color: isSelected ? AppTheme.bronzeGold.withOpacity(0.05) : Colors.transparent,
-        ),
-        child: Column(
+  // Widget hiển thị từng nhóm tùy chọn (Size, Topping, Đường...)
+  Widget _buildOptionGroup(dynamic group) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 25),
+        Row(
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(sub, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+            Text(group.name.toUpperCase(), 
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2)),
+            if (group.isRequired)
+              const Text(" *", style: TextStyle(color: Colors.red)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: group.options.map<Widget>((option) {
+            bool isSelected = _userSelections[group.name]?.contains(option.name) ?? false;
+            
+            return ChoiceChip(
+              label: Text("${option.name} ${option.extraPrice > 0 ? '(+${option.extraPrice.toInt()}đ)' : ''}"),
+              selected: isSelected,
+              selectedColor: AppTheme.bronzeGold,
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : Colors.black,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              onSelected: (selected) {
+                setState(() {
+                  if (group.isMultiSelect) {
+                    // Logic chọn nhiều (Checkbox)
+                    if (selected) {
+                      _userSelections[group.name]!.add(option.name);
+                    } else {
+                      _userSelections[group.name]!.remove(option.name);
+                    }
+                  } else {
+                    // Logic chọn một (Radio)
+                    _userSelections[group.name] = [option.name];
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // Widget Ảnh Header
+  Widget _buildHeaderImage() {
+    return Hero(
+      tag: 'food-${widget.food.id}',
+      child: Container(
+        height: 350,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(widget.food.imageUrl ?? ''),
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Widget Thông tin cơ bản
+  Widget _buildFoodInfo(double currentPrice) {
+    return Transform.translate(
+      offset: const Offset(0, -30),
+      child: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          color: AppTheme.ivoryWhite,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 30, 24, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: Text(widget.food.name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold))),
+                Text("${currentPrice.toInt()}đ", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.darkPurple)),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Text(widget.food.description, style: const TextStyle(color: Colors.grey, fontSize: 14)),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 
-  Widget _chipOption(String label, bool isSelected, VoidCallback onTap) => Padding(
-    padding: const EdgeInsets.only(right: 10),
-    child: ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      selectedColor: AppTheme.bronzeGold,
-      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+  // Widget Thanh toán dưới cùng
+  Widget _buildBottomBar(double totalPrice) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _noteController,
+              decoration: InputDecoration(
+                hintText: "Ghi chú cho quán...",
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                _quantitySelector(),
+                const SizedBox(width: 15),
+                Expanded(child: _addButton(totalPrice)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _quantitySelector() {
+    return Container(
+      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: [
+          IconButton(onPressed: () => setState(() => _quantity > 1 ? _quantity-- : null), icon: const Icon(Icons.remove)),
+          Text("$_quantity", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          IconButton(onPressed: () => setState(() => _quantity++), icon: const Icon(Icons.add)),
+        ],
+      ),
+    );
+  }
+
+  Widget _addButton(double totalPrice) {
+    return ElevatedButton(
+      onPressed: () {
+        // CHUYỂN ĐỔI _userSelections SANG List<SelectedOption>
+        List<SelectedOption> selections = [];
+        _userSelections.forEach((groupName, items) {
+          if (items.isNotEmpty) {
+            selections.add(SelectedOption(groupName: groupName, selectedItems: items));
+          }
+        });
+
+        // GỌI PROVIDER THÊM VÀO GIỎ
+        context.read<CartProvider>().addToCart(
+          widget.food,
+          totalPrice, // Giá đã bao gồm extra
+          selections,
+          _quantity,
+          _noteController.text.isNotEmpty ? _noteController.text : null,
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Đã thêm vào giỏ hàng!"), backgroundColor: Colors.green)
+        );
+        Navigator.pop(context);
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppTheme.darkPurple,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Text("THÊM • ${(totalPrice * _quantity).toInt()}đ", 
+        style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold, fontSize: 16)),
+    );
+  }
+
+  // --- FIX CẢNH BÁO withOpacity ---
+  Widget _circleButton(IconData icon, VoidCallback onTap) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(10),
+      // Dùng .withValues thay cho .withOpacity
+      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4), shape: BoxShape.circle),
+      child: Icon(icon, color: Colors.white, size: 20),
     ),
   );
 }

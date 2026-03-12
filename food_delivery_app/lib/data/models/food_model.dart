@@ -1,3 +1,5 @@
+import 'food_options.dart';
+
 class FoodModel {
   final int id;
   final int categoryId;
@@ -6,6 +8,7 @@ class FoodModel {
   final double price;
   final String? imageUrl;
   final String foodType; // 'drink' hoặc 'food'
+  final List<OptionGroup> optionGroups;
 
   FoodModel({
     required this.id,
@@ -16,6 +19,7 @@ class FoodModel {
     required this.foodType,
 
     this.imageUrl,
+    this.optionGroups = const [],
   });
 
   factory FoodModel.fromJson(Map<String, dynamic> json) {
@@ -27,6 +31,9 @@ class FoodModel {
       description: json['description'] ?? "",
       price: double.parse(json['price'].toString()),
       imageUrl: json['image_url'],
+      optionGroups: json['option_groups'] != null 
+        ? (json['option_groups'] as List).map((g) => OptionGroup.fromJson(g)).toList()
+        : [],
     );
   }
 }

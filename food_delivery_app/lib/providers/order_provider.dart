@@ -31,8 +31,8 @@ class OrderProvider with ChangeNotifier {
           "items": cart.items.map((item) => {
             "food_id": item.foodId,
             "quantity": item.quantity,
-            "unit_price": item.price,
-            "item_note": item.itemNote
+            "unit_price": item.basePrice,
+            "item_note": item.note
           }).toList(),
         }),
       );
