@@ -20,6 +20,8 @@ class _EditCartItemSheetState extends State<EditCartItemSheet> {
   late Map<String, List<String>> _userSelections;
   late TextEditingController _noteController;
 
+  List<String> _errorGroups = [];
+
   @override
   void initState() {
     super.initState();
@@ -102,11 +104,27 @@ class _EditCartItemSheetState extends State<EditCartItemSheet> {
 
   // Tái sử dụng Widget render group
   Widget _buildOptionGroup(dynamic group) {
+    // Kiểm tra xem nhóm này có đang bị thiếu lựa chọn không
+    bool isError = _errorGroups.contains(group.name);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 15),
-        Text(group.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+        Row(
+          children: [
+            Text(
+              group.name, 
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                // NẾU LỖI THÌ HIỆN MÀU ĐỎ
+                color: isError ? Colors.red : Colors.grey[700], 
+              ),
+            ),
+            if (group.isRequired)
+              const Text(" *", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ],
+        ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -115,12 +133,17 @@ class _EditCartItemSheetState extends State<EditCartItemSheet> {
             return ChoiceChip(
               label: Text(option.name),
               selected: isSelected,
+              selectedColor: AppTheme.bronzeGold,
               onSelected: (val) {
                 setState(() {
                   if (group.isMultiSelect) {
                     val ? _userSelections[group.name]!.add(option.name) : _userSelections[group.name]!.remove(option.name);
                   } else {
                     _userSelections[group.name] = [option.name];
+                  }
+                  // Khi người dùng đã chọn lại thì xóa lỗi của nhóm đó đi
+                  if (_userSelections[group.name]!.isNotEmpty) {
+                    _errorGroups.remove(group.name);
                   }
                 });
               },
@@ -148,6 +171,31 @@ class _EditCartItemSheetState extends State<EditCartItemSheet> {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(backgroundColor: AppTheme.darkPurple, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
       onPressed: () {
+        setState(() => _errorGroups = []); // Reset lỗi mỗi lần bấm
+        bool hasError = false;
+        // --- CHỐT CHẶN: KIỂM TRA TÙY CHỌN BẮT BUỘC ---
+        for (var group in widget.food.optionGroups) {
+          if (group.isRequired) {
+            final selectedItems = _userSelections[group.name] ?? [];
+            if (selectedItems.isEmpty) {
+              _errorGroups.add(group.name); // Lưu tên nhóm bị thiếu
+              hasError = true;
+              return; // Dừng lại
+            }
+          }
+        }
+
+        if (hasError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Vui lòng chọn đầy đủ các mục bắt buộc (*)"),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+          return;
+        }
+
+        // --- NẾU OK THÌ TIẾN HÀNH CẬP NHẬT ---
         List<SelectedOption> selections = [];
         _userSelections.forEach((name, items) {
           if (items.isNotEmpty) selections.add(SelectedOption(groupName: name, selectedItems: items));

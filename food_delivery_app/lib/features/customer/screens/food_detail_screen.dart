@@ -16,6 +16,7 @@ class FoodDetailScreen extends StatefulWidget {
 class _FoodDetailScreenState extends State<FoodDetailScreen> {
   int _quantity = 1;
   final TextEditingController _noteController = TextEditingController();
+  List<String> _errorGroups = []; // Để lưu danh sách các nhóm đang bị thiếu lựa chọn
 
   // 1. KHO LƯU TRỮ LỰA CHỌN: { "Tên nhóm": ["Lựa chọn A", "Lựa chọn B"] }
   final Map<String, List<String>> _userSelections = {};
@@ -28,12 +29,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
   // Tự động chọn option đầu tiên nếu nhóm đó là Bắt buộc (Required)
   void _initializeDefaultOptions() {
-    for (var group in widget.food.optionGroups) {
-      if (group.isRequired && group.options.isNotEmpty) {
-        _userSelections[group.name] = [group.options[0].name];
-      } else {
+    for (var group in widget.food.optionGroups) {     
         _userSelections[group.name] = [];
-      }
     }
   }
 
@@ -98,6 +95,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
   // Widget hiển thị từng nhóm tùy chọn (Size, Topping, Đường...)
   Widget _buildOptionGroup(dynamic group) {
+    bool isError = _errorGroups.contains(group.name);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -105,9 +104,15 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         Row(
           children: [
             Text(group.name.toUpperCase(), 
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2)),
+              style: TextStyle(
+                fontSize: 13, 
+                fontWeight: FontWeight.bold, 
+                // Nếu lỗi thì hiện màu đỏ, không thì hiện màu xám/đen
+                color: isError ? Colors.red : Colors.grey, 
+                letterSpacing: 1.2
+              )),
             if (group.isRequired)
-              const Text(" *", style: TextStyle(color: Colors.red)),
+              const Text(" *", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 12),
@@ -245,7 +250,46 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   Widget _addButton(double totalPrice) {
     return ElevatedButton(
       onPressed: () {
-        // CHUYỂN ĐỔI _userSelections SANG List<SelectedOption>
+        // 1. Log để kiểm tra trong Debug Console
+        debugPrint("--- BẮT ĐẦU KIỂM TRA GIỎ HÀNG ---");
+        
+        setState(() => _errorGroups = []); 
+        bool hasError = false;
+
+        // 2. Duyệt qua từng nhóm tùy chọn
+        for (var group in widget.food.optionGroups) {
+          debugPrint("Nhóm: ${group.name} | Bắt buộc: ${group.isRequired}");
+
+          if (group.isRequired) {
+            final selectedItems = _userSelections[group.name] ?? [];
+            debugPrint("Số lượng đã chọn của nhóm ${group.name}: ${selectedItems.length}");
+
+            if (selectedItems.isEmpty) {
+              _errorGroups.add(group.name);
+              hasError = true;
+            }
+          }
+        }
+
+        // 3. Xử lý nếu có lỗi
+        if (hasError) {
+          debugPrint("KẾT QUẢ: Có lỗi! Không cho thêm vào giỏ.");
+          ScaffoldMessenger.of(context).clearSnackBars(); // Xóa thông báo cũ
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text("Vui lòng chọn các mục bắt buộc (*)"),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating, // Hiện nổi lên cho dễ thấy
+            ),
+          );
+          setState(() {}); // Render lại để hiện tiêu đề màu đỏ
+          return; // DỪNG HÀM TẠI ĐÂY
+        }
+
+        // 4. Nếu không lỗi thì mới chạy tiếp code bên dưới
+        debugPrint("KẾT QUẢ: Thành công! Đang thêm vào giỏ...");
+        // ... (Giữ nguyên phần logic add to Cart của bạn)
+        
         List<SelectedOption> selections = [];
         _userSelections.forEach((groupName, items) {
           if (items.isNotEmpty) {
@@ -253,27 +297,18 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           }
         });
 
-        // GỌI PROVIDER THÊM VÀO GIỎ
         context.read<CartProvider>().addToCart(
           widget.food,
-          totalPrice, // Giá đã bao gồm extra
+          totalPrice,
           selections,
           _quantity,
           _noteController.text.isNotEmpty ? _noteController.text : null,
         );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Đã thêm vào giỏ hàng!"), backgroundColor: Colors.green)
-        );
         Navigator.pop(context);
       },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.darkPurple,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: Text("THÊM • ${(totalPrice * _quantity).toInt()}đ", 
-        style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold, fontSize: 16)),
+      // ...
+      child: Text("THÊM • ${(totalPrice * _quantity).toInt()}đ", style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)),
     );
   }
 

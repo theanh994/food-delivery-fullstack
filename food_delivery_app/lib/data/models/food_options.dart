@@ -28,8 +28,8 @@ class OptionGroup {
   factory OptionGroup.fromJson(Map<String, dynamic> json) {
     return OptionGroup(
       name: json['name'],
-      isRequired: json['is_required'] == 1 || json['is_required'] == true,
-      isMultiSelect: json['is_multi_select'] == 1 || json['is_multi_select'] == true,
+      isRequired: json['is_required'].toString() == '1' || json['is_required'].toString() == 'true',
+      isMultiSelect: json['is_multi_select'].toString() == '1' || json['is_multi_select'].toString() == 'true',
       options: (json['options'] as List).map((item) => OptionItem.fromJson(item)).toList(),
     );
   }
