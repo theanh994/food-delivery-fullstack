@@ -12,6 +12,7 @@ import 'features/auth/splash_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart'; 
 import 'features/customer/screens/home_screen.dart';
+import 'features/order/screens/order_history_screen.dart'; 
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +44,7 @@ class FoodDeliveryApp extends StatelessWidget {
           '/register': (context) => const RegisterScreen(),   // Trỏ về màn hình thật
           '/customer_home': (context) => const CustomerHomeScreen(),
           '/cart': (context) => const CartScreen(),
+          '/order_history': (context) => const OrderHistoryScreen(),
           '/driver_home': (context) => const PlaceholderScreen(title: 'Trang chủ Tài xế'),
         },
       ),

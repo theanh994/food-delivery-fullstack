@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/cart_item.dart';
 import '../widgets/edit_cart_item_sheet.dart';
 import '../../../providers/food_provider.dart';
+import '../../order/screens/order_success_screen.dart'; // THÊM DÒNG NÀY
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -227,14 +228,29 @@ class _CartScreenState extends State<CartScreen> {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng nhập địa chỉ")));
               return;
             }
-            bool success = await orderProv.placeOrder(
+            int? orderId = await orderProv.placeOrder(
               customerId: auth.currentUser!.id,
               address: _addressController.text,
               note: _noteController.text,
               cart: cart,
             );
-            if (success && mounted) {
-              _showSuccessDialog();
+            if (mounted) {
+              if (orderId != null) {
+                // Nếu có orderId nghĩa là đặt hàng thành công
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đặt hàng thành công!'), backgroundColor: Colors.green),
+                );
+                
+                // Điều hướng sang màn hình Thành công (hoặc Chi tiết đơn hàng vừa tạo)
+                Navigator.pushReplacement(
+                  context, 
+                  MaterialPageRoute(builder: (_) => OrderSuccessScreen(orderId: orderId))
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đặt hàng thất bại. Vui lòng thử lại!'), backgroundColor: Colors.red),
+                );
+              }
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.darkPurple, minimumSize: const Size(double.infinity, 56)),
@@ -266,18 +282,4 @@ class _CartScreenState extends State<CartScreen> {
     ]),
   );
 
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Icon(Icons.check_circle, color: Colors.green, size: 60),
-        content: const Text("Đặt hàng thành công! Đơn hàng của bạn đang được xử lý.", textAlign: TextAlign.center),
-        actions:[TextButton(onPressed: () {
-          Navigator.pop(context); 
-          Navigator.pushReplacementNamed(context, '/customer_home');
-        }, child: const Text("OK"))],
-      ),
-    );
-  }
 }
