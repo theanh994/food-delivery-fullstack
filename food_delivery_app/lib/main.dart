@@ -14,7 +14,8 @@ import 'features/auth/register_screen.dart';
 import 'features/auth/forgot_password_screen.dart';
 import 'features/customer/screens/home_screen.dart';
 import 'features/customer/screens/cart_screen.dart';
-import 'features/order/screens/order_history_screen.dart'; 
+import 'features/notification/screens/notification_screen.dart';
+import 'features/order/screens/order_history_screen.dart';
 
 import 'features/profile/screens/profile_screen.dart'; // Mới
 import 'features/profile/screens/edit_profile_screen.dart'; // Mới
@@ -60,6 +61,7 @@ class FoodDeliveryApp extends StatelessWidget {
           '/customer_home': (context) => const CustomerHomeScreen(),
           '/cart': (context) => const CartScreen(),
           '/order_history': (context) => const OrderHistoryScreen(),
+          '/notifications': (context) => const NotificationScreen(),
 
           '/driver_home': (context) => const PlaceholderScreen(title: 'Trang chủ Tài xế'),
         },

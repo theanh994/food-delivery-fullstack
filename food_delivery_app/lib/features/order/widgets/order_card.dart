@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../data/models/order_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../screens/order_detail_screen.dart';
+import '../screens/order_tracking_screen.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -37,8 +38,20 @@ class OrderCard extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => OrderDetailScreen(order: order))),
-      child: Container(
+      onTap: () {
+        // Nếu đơn đang trong quá trình vận chuyển
+        if (['pending', 'accepted', 'picking', 'delivering'].contains(order.status)) {
+          Navigator.push(context, MaterialPageRoute(
+            builder: (_) => OrderTrackingScreen(order: order)
+          ));
+        } else {
+          // Nếu đơn đã xong hoặc đã hủy
+          Navigator.push(context, MaterialPageRoute(
+            builder: (_) => OrderDetailScreen(order: order)
+          ));
+        }
+      },
+            child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

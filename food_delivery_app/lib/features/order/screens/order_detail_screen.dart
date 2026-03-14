@@ -5,6 +5,7 @@ import '../../../data/models/order_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/order_provider.dart';
 import '../../../providers/auth_provider.dart';
+import 'review_screen.dart';
 
 class OrderDetailScreen extends StatelessWidget {
   final OrderModel order;
@@ -107,6 +108,30 @@ class OrderDetailScreen extends StatelessWidget {
             ]),
 
             const SizedBox(height: 50),
+
+            // --- CHÈN VÀO ĐÂY (Trên nút Hủy đơn) ---
+            if (order.status == 'completed')
+              Padding(
+                padding: const EdgeInsets.only(bottom: 15),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.bronzeGold),
+                    onPressed: () {
+                      // Lấy món đầu tiên trong đơn để đánh giá mẫu
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => ReviewScreen(
+                          orderId: order.id, 
+                          foodId: 1, // Tạm thời để ID món là 1, hoặc order.details[0].foodId nếu bạn đã cập nhật Model
+                          foodName: order.details[0].foodName
+                        )
+                      ));
+                    },
+                    child: const Text("ĐÁNH GIÁ MÓN ĂN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
 
             // Nút Hủy đơn (Chỉ hiện khi đơn là pending)
             if (order.status == 'pending')

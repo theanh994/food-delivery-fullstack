@@ -53,7 +53,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                             Text("Tiệm đồ ăn Violet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                           ],
                         ),
-                        CircleAvatar(backgroundColor: Colors.grey[200], child: const Icon(Icons.notifications_none, color: Colors.black)),
+                        GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/notifications'),
+                          child: CircleAvatar(
+                            backgroundColor: Colors.grey[200], 
+                            child: const Icon(Icons.notifications_none, color: Colors.black)
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),

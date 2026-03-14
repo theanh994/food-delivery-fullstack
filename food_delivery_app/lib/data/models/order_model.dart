@@ -1,10 +1,12 @@
 class OrderDetailModel {
+  final int foodId;
   final String foodName;
   final int quantity;
   final double unitPrice;
   final String? itemNote;
 
   OrderDetailModel({
+    required this.foodId,
     required this.foodName,
     required this.quantity,
     required this.unitPrice,
@@ -13,6 +15,7 @@ class OrderDetailModel {
 
   factory OrderDetailModel.fromJson(Map<String, dynamic> json) {
     return OrderDetailModel(
+      foodId: int.parse(json['food_id'].toString()),
       foodName: json['food_name'] ?? 'Món ăn',
       quantity: int.parse(json['quantity'].toString()),
       unitPrice: double.parse(json['unit_price'].toString()),
