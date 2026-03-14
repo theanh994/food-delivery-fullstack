@@ -50,12 +50,12 @@ class FoodDeliveryApp extends StatelessWidget {
           '/splash': (context) => const SplashScreen(), 
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),  
-          '/forgot_password': (context) => const ForgotPasswordScreen(), // Mới
+          '/forgot_password': (context) => const ForgotPasswordScreen(), 
 
-          '/profile': (context) => const ProfileScreen(), // Mới
-          '/edit_profile': (context) => const EditProfileScreen(), // Mới
-          '/address_book': (context) => const AddressBookScreen(), // Mới
-          '/change_password': (context) => const ChangePasswordScreen(), // Mới
+          '/profile': (context) => const ProfileScreen(), 
+          '/edit_profile': (context) => const EditProfileScreen(), 
+          '/address_book': (context) => const AddressBookScreen(), 
+          '/change_password': (context) => const ChangePasswordScreen(), 
 
           '/customer_home': (context) => const CustomerHomeScreen(),
           '/cart': (context) => const CartScreen(),

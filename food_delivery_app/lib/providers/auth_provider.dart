@@ -61,6 +61,41 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiEndpoints.baseUrl}/forgot_password.php"),
+        body: jsonEncode({"email": email}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"status": "error", "message": "Lỗi kết nối máy chủ"};
+    }
+  }
+
+  Future<bool> changePassword(int userId, String oldPass, String newPass) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiEndpoints.baseUrl}/change_password.php"),
+        body: jsonEncode({
+          "user_id": userId,
+          "old_password": oldPass,
+          "new_password": newPass
+        }),
+      );
+      final data = jsonDecode(response.body);
+      _isLoading = false;
+      notifyListeners();
+      return data['status'] == 'success';
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> register(String name, String email, String phone, String password) async {
   _isLoading = true;
   _errorMessage = '';

@@ -158,8 +158,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       TextButton(
-                        onPressed: () {}, // Chức năng quên mật khẩu (Sprint sau)
-                        child: const Text('Quên mật khẩu?', style: TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)),
+                        onPressed: () {
+                          // KÍCH HOẠT ĐIỀU HƯỚNG TẠI ĐÂY
+                          Navigator.pushNamed(context, '/forgot_password');
+                        },
+                        child: const Text(
+                          'Quên mật khẩu?', 
+                          style: TextStyle(
+                            color: AppTheme.bronzeGold, 
+                            fontWeight: FontWeight.bold
+                          )
+                        ),
                       ),
                     ],
                   ),
