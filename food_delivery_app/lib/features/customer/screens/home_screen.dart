@@ -39,6 +39,13 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // Trong phần AppBar hoặc Header của home_screen.dart
+                        IconButton(
+                          icon: const Icon(Icons.person_outline),
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/profile'); // Mở trang Profile
+                          },
+                        ),
                         const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

@@ -103,4 +103,15 @@ class AuthProvider with ChangeNotifier {
       return false;
     }
   }
+  // Hàm cập nhật thông tin User từ dữ liệu mới (dùng sau khi Edit Profile)
+  void updateUser(UserModel newUser) {
+    _currentUser = newUser;
+    notifyListeners(); // Thông báo để toàn bộ giao diện (Home, Profile) đổi tên ngay
+  }
+  
+  void logout() {
+    _currentUser = null;
+    _errorMessage = '';
+    notifyListeners();
+  }
 }
