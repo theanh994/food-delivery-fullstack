@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../providers/cart_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/order_provider.dart';
+import '../../../providers/address_provider.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/cart_item.dart';
 import '../widgets/edit_cart_item_sheet.dart';
 import '../../../providers/food_provider.dart';
-import '../../order/screens/order_success_screen.dart'; // THÊM DÒNG NÀY
+import '../../order/screens/order_success_screen.dart'; 
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -19,6 +22,80 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   final _addressController = TextEditingController();
   final _noteController = TextEditingController();
+
+  // Tự động lấy danh sách địa chỉ khi vào giỏ hàng ---
+  @override
+  void initState() {
+    super.initState();
+    final user = context.read<AuthProvider>().currentUser;
+    if (user != null) {
+      Future.microtask(() => 
+        context.read<AddressProvider>().fetchAddresses(user.id)
+      );
+    }
+  }
+
+  // Hàm hiển thị bảng chọn địa chỉ
+  void _showAddressSelector() {
+    final addressProv = context.read<AddressProvider>();
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Chọn địa chỉ giao hàng", 
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 15),
+              
+              addressProv.addresses.isEmpty 
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(child: Text("Bạn chưa lưu địa chỉ nào")),
+                  )
+                : Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: addressProv.addresses.length,
+                      itemBuilder: (context, index) {
+                        final addr = addressProv.addresses[index];
+                        return ListTile(
+                          leading: const Icon(Icons.location_on, color: AppTheme.bronzeGold),
+                          title: Text(addr['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(addr['address_detail']),
+                          onTap: () {
+                            // Khi chọn: Điền vào ô nhập và đóng bảng
+                            setState(() {
+                              _addressController.text = addr['address_detail'];
+                            });
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.add_circle_outline, color: AppTheme.darkPurple),
+                title: const Text("Quản lý sổ địa chỉ"),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/address_book');
+                },
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +127,24 @@ class _CartScreenState extends State<CartScreen> {
                         ...cart.items.map((item) => _buildCartItem(item, cart)),
 
                         const SizedBox(height: 24),
-                        _buildSectionHeader(Icons.location_on, "Địa chỉ giao hàng"),
+
+                        // Nâng cấp phần tiêu đề Địa chỉ có thêm nút chọn nhanh ---
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildSectionHeader(Icons.location_on, "Địa chỉ giao hàng"),
+                            TextButton(
+                              onPressed: _showAddressSelector,
+                              child: const Text("Chọn từ sổ địa chỉ", 
+                                style: TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+
                         TextField(
                           controller: _addressController,
                           maxLines: 2,
-                          decoration: _inputStyle("Nhập địa chỉ nhận hàng..."),
+                          decoration: _inputStyle("Nhập địa chỉ nhận hàng hoặc chọn từ sổ địa chỉ..."),
                         ),
 
                         const SizedBox(height: 20),
