@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../data/models/food_model.dart';
 import '../../../data/models/cart_item.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/app_noti.dart';
 import '../../../providers/cart_provider.dart';
 
 class FoodDetailScreen extends StatefulWidget {
@@ -254,42 +255,28 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         debugPrint("--- BẮT ĐẦU KIỂM TRA GIỎ HÀNG ---");
         
         setState(() => _errorGroups = []); 
-        bool hasError = false;
 
         // 2. Duyệt qua từng nhóm tùy chọn
         for (var group in widget.food.optionGroups) {
-          debugPrint("Nhóm: ${group.name} | Bắt buộc: ${group.isRequired}");
-
           if (group.isRequired) {
             final selectedItems = _userSelections[group.name] ?? [];
-            debugPrint("Số lượng đã chọn của nhóm ${group.name}: ${selectedItems.length}");
-
+            
             if (selectedItems.isEmpty) {
-              _errorGroups.add(group.name);
-              hasError = true;
+              // --- ĐÂY LÀ VỊ TRÍ ĐÚNG: Biến 'group' đang tồn tại ở đây ---
+              AppNoti.show(
+                context, 
+                "Bạn chưa chọn: ${group.name}", 
+                type: NotiType.error
+              );
+              
+              setState(() {
+                _errorGroups.add(group.name);
+              });
+              return; // Dừng lại ngay lập tức khi gặp lỗi đầu tiên
             }
           }
         }
 
-        // 3. Xử lý nếu có lỗi
-        if (hasError) {
-          debugPrint("KẾT QUẢ: Có lỗi! Không cho thêm vào giỏ.");
-          ScaffoldMessenger.of(context).clearSnackBars(); // Xóa thông báo cũ
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text("Vui lòng chọn các mục bắt buộc (*)"),
-              backgroundColor: Colors.redAccent,
-              behavior: SnackBarBehavior.floating, // Hiện nổi lên cho dễ thấy
-            ),
-          );
-          setState(() {}); // Render lại để hiện tiêu đề màu đỏ
-          return; // DỪNG HÀM TẠI ĐÂY
-        }
-
-        // 4. Nếu không lỗi thì mới chạy tiếp code bên dưới
-        debugPrint("KẾT QUẢ: Thành công! Đang thêm vào giỏ...");
-        // ... (Giữ nguyên phần logic add to Cart của bạn)
-        
         List<SelectedOption> selections = [];
         _userSelections.forEach((groupName, items) {
           if (items.isNotEmpty) {
@@ -304,6 +291,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           _quantity,
           _noteController.text.isNotEmpty ? _noteController.text : null,
         );
+
+        AppNoti.show(context, "Đã thêm vào giỏ hàng!", type: NotiType.success);
 
         Navigator.pop(context);
       },

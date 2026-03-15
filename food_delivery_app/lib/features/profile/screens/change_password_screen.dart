@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/app_noti.dart';
 import '../../../providers/auth_provider.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -27,10 +28,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đổi mật khẩu thành công!"), backgroundColor: Colors.green));
+          AppNoti.show(context, "Đổi mật khẩu thành công!", type: NotiType.success);
           Navigator.pop(context);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Mật khẩu cũ không đúng!"), backgroundColor: Colors.red));
+          AppNoti.show(
+            context, 
+            "Mật khẩu cũ không chính xác hoặc lỗi kết nối", 
+            type: NotiType.error
+          );        
         }
       }
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/app_noti.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -32,9 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chào mừng bạn trở lại!'), backgroundColor: Colors.green),
-        );
+        AppNoti.show(context, "Chào mừng bạn trở lại!", type: NotiType.success);
         
         // Điều hướng dựa trên Role trả về từ API
         if (authProvider.currentUser?.role == 'driver') {
@@ -44,8 +43,10 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         // Hiển thị lỗi (Sai mật khẩu, email không tồn tại...)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(authProvider.errorMessage), backgroundColor: Colors.red),
+        AppNoti.show(
+          context, 
+          authProvider.errorMessage, // Sẽ hiện: "Sai mật khẩu" hoặc "Email không tồn tại"
+          type: NotiType.error
         );
       }
     }

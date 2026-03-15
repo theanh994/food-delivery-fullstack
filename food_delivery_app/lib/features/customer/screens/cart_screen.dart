@@ -7,6 +7,8 @@ import '../../../providers/order_provider.dart';
 import '../../../providers/address_provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/app_noti.dart';
+
 import '../../../data/models/cart_item.dart';
 import '../widgets/edit_cart_item_sheet.dart';
 import '../../../providers/food_provider.dart';
@@ -315,7 +317,7 @@ class _CartScreenState extends State<CartScreen> {
         child: ElevatedButton(
           onPressed: orderProv.isPlacingOrder ? null : () async {
             if (_addressController.text.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng nhập địa chỉ")));
+              AppNoti.show(context, "Vui lòng nhập địa chỉ", type: NotiType.error);
               return;
             }
             int? orderId = await orderProv.placeOrder(
@@ -327,9 +329,8 @@ class _CartScreenState extends State<CartScreen> {
             if (mounted) {
               if (orderId != null) {
                 // Nếu có orderId nghĩa là đặt hàng thành công
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đặt hàng thành công!'), backgroundColor: Colors.green),
-                );
+                // MỚI:
+                AppNoti.show(context, "Đơn hàng của bạn đang được chuẩn bị!", type: NotiType.success);
                 
                 // Điều hướng sang màn hình Thành công (hoặc Chi tiết đơn hàng vừa tạo)
                 Navigator.pushReplacement(
@@ -337,9 +338,7 @@ class _CartScreenState extends State<CartScreen> {
                   MaterialPageRoute(builder: (_) => OrderSuccessScreen(orderId: orderId))
                 );
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đặt hàng thất bại. Vui lòng thử lại!'), backgroundColor: Colors.red),
-                );
+                AppNoti.show(context, "Đặt hàng thất bại. Vui lòng thử lại!", type: NotiType.error);
               }
             }
           },

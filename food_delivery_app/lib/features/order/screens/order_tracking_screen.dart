@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/order_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/app_noti.dart';
+
 import '../../../providers/order_provider.dart';
 import '../../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
@@ -22,11 +24,27 @@ class OrderTrackingScreen extends StatelessWidget {
             onPressed: () async {
               final userId = context.read<AuthProvider>().currentUser!.id;
               bool success = await context.read<OrderProvider>().cancelOrder(order.id, userId);
+              
               if (context.mounted) {
-                Navigator.pop(dialogContext);
+                Navigator.pop(dialogContext); // Đóng dialog hỏi
+                
                 if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã hủy đơn hàng")));
-                  Navigator.pop(context); // Quay về trang lịch sử
+                  // DÙNG APPNOTI MỚI Ở ĐÂY
+                  AppNoti.show(
+                    context, 
+                    "Đã hủy đơn hàng thành công!", 
+                    type: NotiType.success
+                  );
+                  
+                  // Chạy ngược lại trang lịch sử đơn hàng
+                  Navigator.pop(context); 
+                } else {
+                  // BÁO LỖI NẾU KHÔNG HỦY ĐƯỢC
+                  AppNoti.show(
+                    context, 
+                    "Không thể hủy đơn hàng vào lúc này.", 
+                    type: NotiType.error
+                  );
                 }
               }
             },
