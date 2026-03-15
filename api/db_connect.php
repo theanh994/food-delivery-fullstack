@@ -1,8 +1,9 @@
 <?php
 $host = "localhost";
-$user = "root"; // User mặc định của XAMPP
-$pass = "";     // Pass mặc định của XAMPP
-$dbname = "food_delivery_db"; // Tên database bạn đã tạo
+$user = "root"; 
+$pass = "";     
+$dbname = "food_delivery_db"; 
+date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 

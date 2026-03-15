@@ -187,7 +187,7 @@ class _CartScreenState extends State<CartScreen> {
               item.imageUrl, 
               width: 70, height: 70, 
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: Colors.grey[200], width: 70, height: 70, child: const Icon(Icons.fastfood, color: Colors.grey)),
+              errorBuilder: (_, _, _) => Container(color: Colors.grey[200], width: 70, height: 70, child: const Icon(Icons.fastfood, color: Colors.grey)),
             ),
           ),
           const SizedBox(width: 12),

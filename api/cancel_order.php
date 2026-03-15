@@ -4,34 +4,33 @@ header("Content-Type: application/json");
 require_once 'db_connect.php';
 
 $data = json_decode(file_get_contents("php://input"));
+$order_id = $data->order_id;
 
-if (!empty($data->order_id)) {
-    $order_id = $data->order_id;
+// 1. Lấy thông tin thời gian tạo đơn
+$order_query = $conn->query("SELECT created_at, customer_id FROM orders WHERE id = $order_id AND status = 'pending'");
+$order = $order_query->fetch_assoc();
 
-    // 1. Tìm customer_id của đơn hàng này
-    $order_query = $conn->query("SELECT customer_id FROM orders WHERE id = $order_id");
-    $order_data = $order_query->fetch_assoc();
+if ($order) {
+    $created_at = strtotime($order['created_at']);
+    $current_time = time();
+    $diff_seconds = $current_time - $created_at;
 
-    if ($order_data) {
-        $customer_id = $order_data['customer_id'];
-
-        // 2. Cập nhật đơn hàng sang cancelled
-        $update_sql = "UPDATE orders SET status = 'cancelled' WHERE id = $order_id AND status = 'pending'";
-        
-        if ($conn->query($update_sql) && $conn->affected_rows > 0) {
-            
-            // 3. TỰ ĐỘNG CHÈN THÔNG BÁO (Quan trọng nhất)
-            $title = "Đơn hàng đã hủy";
-            $msg = "Bạn đã hủy thành công đơn hàng #EPC-$order_id.";
-            $conn->query("INSERT INTO notifications (user_id, title, message) VALUES ($customer_id, '$title', '$msg')");
-
-            echo json_encode(["status" => "success", "message" => "Đã hủy và tạo thông báo"]);
-        } else {
-            echo json_encode(["status" => "error", "message" => "Đơn hàng không ở trạng thái chờ hoặc đã bị xử lý"]);
-        }
-    } else {
-        echo json_encode(["status" => "error", "message" => "Không tìm thấy đơn hàng"]);
+    // --- KIỂM TRA GIỚI HẠN 2 PHÚT (120 giây) ---
+    if ($diff_seconds > 120) {
+        echo json_encode(["status" => "error", "message" => "Đã quá thời gian 2 phút để tự hủy. Vui lòng gọi hotline!"]);
+        exit;
     }
+
+    // 2. Nếu còn trong 2 phút thì mới tiến hành hủy
+    $customer_id = $order['customer_id'];
+    $sql = "UPDATE orders SET status = 'cancelled' WHERE id = $order_id";
+    
+    if ($conn->query($sql)) {
+        // Ghi thông báo hủy đơn
+        $conn->query("INSERT INTO notifications (user_id, title, message) VALUES ($customer_id, 'Đơn hàng đã hủy', 'Bạn đã hủy đơn #EPC-$order_id thành công.')");
+        echo json_encode(["status" => "success", "message" => "Hủy đơn thành công"]);
+    }
+} else {
+    echo json_encode(["status" => "error", "message" => "Không tìm thấy đơn hàng hoặc đơn đã được nhận."]);
 }
-$conn->close();
 ?>

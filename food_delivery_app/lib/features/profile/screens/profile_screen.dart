@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/constants/api_endpoints.dart'; // THÊM DÒNG NÀY để sửa lỗi ApiEndpoints
+import '../../../core/constants/api_endpoints.dart'; 
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -73,7 +73,8 @@ class ProfileScreen extends StatelessWidget {
             _buildMenuItem(Icons.edit, "Chỉnh sửa thông tin", "Tên, ảnh và liên lạc", () => Navigator.pushNamed(context, '/edit_profile')),
             _buildMenuItem(Icons.lock, "Đổi mật khẩu", "Bảo mật tài khoản", () => Navigator.pushNamed(context, '/change_password')),
             _buildMenuItem(Icons.map, "Địa chỉ của tôi", "Nhà riêng, văn phòng...", () => Navigator.pushNamed(context, '/address_book')),
-            
+            _buildMenuItem(Icons.help_outline, "Hỗ trợ & Liên hệ", "Giải đáp thắc mắc và góp ý", () => Navigator.pushNamed(context, '/support')),
+
             const SizedBox(height: 30),
             
             // Logout

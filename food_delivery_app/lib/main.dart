@@ -17,10 +17,11 @@ import 'features/customer/screens/cart_screen.dart';
 import 'features/notification/screens/notification_screen.dart';
 import 'features/order/screens/order_history_screen.dart';
 
-import 'features/profile/screens/profile_screen.dart'; // Mới
-import 'features/profile/screens/edit_profile_screen.dart'; // Mới
-import 'features/profile/screens/address_book_screen.dart'; // Mới
-import 'features/profile/screens/change_password_screen.dart'; // Mới
+import 'features/profile/screens/profile_screen.dart'; 
+import 'features/profile/screens/edit_profile_screen.dart'; 
+import 'features/profile/screens/address_book_screen.dart'; 
+import 'features/profile/screens/change_password_screen.dart'; 
+import 'features/profile/screens/support_screen.dart';
 
 import 'features/home/screens/main_screen.dart';
 
@@ -65,6 +66,7 @@ class FoodDeliveryApp extends StatelessWidget {
           '/notifications': (context) => const NotificationScreen(),
 
           '/driver_home': (context) => const PlaceholderScreen(title: 'Trang chủ Tài xế'),
+          '/support': (context) => const SupportScreen(),
         },
       ),
     );
