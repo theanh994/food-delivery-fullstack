@@ -11,6 +11,7 @@ class OrderDetailScreen extends StatelessWidget {
   final OrderModel order;
   const OrderDetailScreen({super.key, required this.order});
 
+  // --- HÀM HELPER 1: TRẢ VỀ MÀU TRẠNG THÁI ---
   Color _getStatusColor(String status) {
     switch (status) {
       case 'pending': return Colors.orange;
@@ -19,6 +20,42 @@ class OrderDetailScreen extends StatelessWidget {
       case 'cancelled': return Colors.red;
       default: return Colors.grey;
     }
+  }
+
+  // --- HÀM HELPER 2: HIỆN DIALOG XÁC NHẬN HỦY (ĐÃ ĐƯA RA NGOÀI HÀM BUILD) ---
+  void _confirmCancelOrder(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Xác nhận hủy"),
+        content: const Text("Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text("Đóng")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              final userId = context.read<AuthProvider>().currentUser!.id;
+              bool success = await context.read<OrderProvider>().cancelOrder(order.id, userId);
+              
+              if (context.mounted) {
+                Navigator.pop(dialogContext); // Đóng dialog
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Đã hủy đơn hàng thành công"), backgroundColor: Colors.orange)
+                  );
+                  Navigator.pop(context); // Quay về màn hình lịch sử
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Không thể hủy đơn vào lúc này"), backgroundColor: Colors.red)
+                  );
+                }
+              }
+            },
+            child: const Text("Xác nhận hủy", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -91,77 +128,62 @@ class OrderDetailScreen extends StatelessWidget {
             const Divider(height: 40),
 
             // Tổng tiền
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text("Tạm tính"), 
-              Text(currencyFormat.format(order.totalAmount))
-            ]),
+            _buildPriceRow("Tạm tính", currencyFormat.format(order.totalAmount), false),
             const SizedBox(height: 8),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text("Phí giao hàng"), 
-              Text(currencyFormat.format(order.shippingFee))
-            ]),
+            _buildPriceRow("Phí giao hàng", currencyFormat.format(order.shippingFee), false),
             const SizedBox(height: 12),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text("TỔNG CỘNG", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              Text(currencyFormat.format(order.finalAmount), 
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.darkPurple)),
-            ]),
+            _buildPriceRow("TỔNG CỘNG", currencyFormat.format(order.finalAmount), true),
 
             const SizedBox(height: 50),
 
-            // --- CHÈN VÀO ĐÂY (Trên nút Hủy đơn) ---
+            // Nút Đánh giá (Hiện khi đã hoàn thành)
             if (order.status == 'completed')
-              Padding(
-                padding: const EdgeInsets.only(bottom: 15),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.bronzeGold),
-                    onPressed: () {
-                      // Lấy món đầu tiên trong đơn để đánh giá mẫu
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => ReviewScreen(
-                          orderId: order.id, 
-                          foodId: 1, // Tạm thời để ID món là 1, hoặc order.details[0].foodId nếu bạn đã cập nhật Model
-                          foodName: order.details[0].foodName
-                        )
-                      ));
-                    },
-                    child: const Text("ĐÁNH GIÁ MÓN ĂN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.bronzeGold, padding: const EdgeInsets.symmetric(vertical: 15)),
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => ReviewScreen(
+                        orderId: order.id, 
+                        foodId: order.details[0].foodId,
+                        foodName: order.details[0].foodName
+                      )
+                    ));
+                  },
+                  child: const Text("ĐÁNH GIÁ MÓN ĂN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
 
-            // Nút Hủy đơn (Chỉ hiện khi đơn là pending)
+            // Nút Hủy đơn (Hiện khi đang chờ)
             if (order.status == 'pending')
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () async {
-                    // Lấy userId từ AuthProvider
-                    final userId = context.read<AuthProvider>().currentUser!.id;
-                    
-                    // Truyền cả orderId và userId vào hàm cancel
-                    bool ok = await context.read<OrderProvider>().cancelOrder(order.id, userId);
-                    
-                    if (ok && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Đã hủy đơn hàng thành công"), backgroundColor: Colors.orange),
-                      );
-                      Navigator.pop(context); // Quay lại trang lịch sử
-                    }
-                  },
+                  onPressed: () => _confirmCancelOrder(context),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red, 
-                    side: const BorderSide(color: Colors.red)
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text("HỦY ĐƠN HÀNG"),
+                  child: const Text("HỦY ĐƠN HÀNG", style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
           ],
         ),
       ),
+    );
+  }
+
+  // Widget phụ trợ để tránh lặp code hiển thị giá
+  Widget _buildPriceRow(String label, String value, bool isBold) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: isBold ? 18 : 14)),
+        Text(value, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: isBold ? 18 : 14, color: isBold ? AppTheme.darkPurple : Colors.black)),
+      ],
     );
   }
 }

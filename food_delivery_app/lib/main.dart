@@ -12,7 +12,7 @@ import 'features/auth/splash_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart'; 
 import 'features/auth/forgot_password_screen.dart';
-import 'features/customer/screens/home_screen.dart';
+// import 'features/customer/screens/home_screen.dart';
 import 'features/customer/screens/cart_screen.dart';
 import 'features/notification/screens/notification_screen.dart';
 import 'features/order/screens/order_history_screen.dart';
@@ -21,6 +21,8 @@ import 'features/profile/screens/profile_screen.dart'; // Mới
 import 'features/profile/screens/edit_profile_screen.dart'; // Mới
 import 'features/profile/screens/address_book_screen.dart'; // Mới
 import 'features/profile/screens/change_password_screen.dart'; // Mới
+
+import 'features/home/screens/main_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +36,6 @@ class FoodDeliveryApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers:[
-        // Đã khai báo AuthProvider chuẩn
         ChangeNotifierProvider(create: (_) => AuthProvider()), 
         ChangeNotifierProvider(create: (_) => FoodProvider()), 
         ChangeNotifierProvider(create: (_) => CartProvider()), 
@@ -58,7 +59,7 @@ class FoodDeliveryApp extends StatelessWidget {
           '/address_book': (context) => const AddressBookScreen(), 
           '/change_password': (context) => const ChangePasswordScreen(), 
 
-          '/customer_home': (context) => const CustomerHomeScreen(),
+          '/customer_home': (context) => const MainScreen(),
           '/cart': (context) => const CartScreen(),
           '/order_history': (context) => const OrderHistoryScreen(),
           '/notifications': (context) => const NotificationScreen(),

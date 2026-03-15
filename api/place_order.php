@@ -45,7 +45,13 @@ if (!empty($data->customer_id) && !empty($data->items)) {
             }
         }
 
-        // Nếu mọi thứ OK, lưu vĩnh viễn vào DB
+        // 3. Tự động tạo thông báo cho khách hàng
+        $msg_title = "Đặt hàng thành công";
+        $msg_body = "Đơn hàng #EPC-$order_id của bạn đã được tiếp nhận và đang chờ xác nhận.";
+        $sql_noti = "INSERT INTO notifications (user_id, title, message) VALUES ($customer_id, '$msg_title', '$msg_body')";
+        $conn->query($sql_noti);
+
+        // 4. Lưu vĩnh viễn
         $conn->commit();
         echo json_encode(["status" => "success", "message" => "Đặt hàng thành công", "order_id" => $order_id]);
 

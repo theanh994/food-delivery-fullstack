@@ -31,45 +31,37 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         child: CustomScrollView(
           slivers: [
             // 1. Header & Search
+            // 1. Header Đã Tinh Chỉnh (Bỏ icon thừa)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, // Căn lề trái toàn bộ
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Trong phần AppBar hoặc Header của home_screen.dart
-                        IconButton(
-                          icon: const Icon(Icons.person_outline),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/profile'); // Mở trang Profile
-                          },
-                        ),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Chào mừng trở lại!", style: TextStyle(color: Colors.grey)),
-                            Text("Tiệm đồ ăn Violet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, '/notifications'),
-                          child: CircleAvatar(
-                            backgroundColor: Colors.grey[200], 
-                            child: const Icon(Icons.notifications_none, color: Colors.black)
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      "Chào mừng trở lại!", 
+                      style: TextStyle(color: Colors.grey, fontSize: 14)
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "Tiệm đồ ăn Violet", 
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.darkPurple)
+                    ),
+                    const SizedBox(height: 25),
+                    
+                    // Thanh Tìm Kiếm
                     TextField(
                       decoration: InputDecoration(
                         hintText: "Hãy chọn món bạn muốn...",
-                        prefixIcon: const Icon(Icons.search),
+                        hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                        prefixIcon: const Icon(Icons.search, color: AppTheme.bronzeGold),
                         filled: true,
                         fillColor: Colors.grey[100],
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15), 
+                          borderSide: BorderSide.none
+                        ),
                       ),
                     ),
                   ],
