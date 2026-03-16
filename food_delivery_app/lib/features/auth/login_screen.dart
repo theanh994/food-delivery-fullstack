@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_noti.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/driver_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,9 +37,24 @@ class _LoginScreenState extends State<LoginScreen> {
         AppNoti.show(context, "Chào mừng bạn trở lại!", type: NotiType.success);
         
         // Điều hướng dựa trên Role trả về từ API
-        if (authProvider.currentUser?.role == 'driver') {
-          Navigator.pushReplacementNamed(context, '/driver_home');
+        final user = authProvider.currentUser!;
+  
+        if (user.role == 'driver') {
+          // NẾU LÀ TÀI XẾ -> Kiểm tra hồ sơ
+          final driverProv = context.read<DriverProvider>();
+          await driverProv.checkDriverStatus(user.id);
+          
+          if (mounted) {
+            if (driverProv.status == 'approved') {
+              Navigator.pushReplacementNamed(context, '/driver_home');
+            } else if (driverProv.status == 'pending') {
+              Navigator.pushReplacementNamed(context, '/driver_pending');
+            } else {
+              Navigator.pushReplacementNamed(context, '/driver_registration');
+            }
+          }
         } else {
+          // NẾU LÀ KHÁCH HÀNG
           Navigator.pushReplacementNamed(context, '/customer_home');
         }
       } else {

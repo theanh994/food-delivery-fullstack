@@ -13,7 +13,10 @@ if (!empty($data->name) && !empty($data->email) && !empty($data->phone) && !empt
     $email = $conn->real_escape_string($data->email);
     $phone = $conn->real_escape_string($data->phone);
     $password_raw = $data->password;
-    $role = 'customer'; // Mặc định theo yêu cầu
+
+    // --- ĐÃ SỬA TẠI ĐÂY: Lấy role động từ Flutter gửi lên ---
+    // Nếu Flutter có gửi trường "role", ta lấy giá trị đó. Nếu không có, mặc định là 'customer'.
+    $role = (!empty($data->role)) ? $conn->real_escape_string($data->role) : 'customer';
 
     // 1. KIỂM TRA TRÙNG LẶP (Email hoặc Phone)
     $checkQuery = "SELECT id FROM users WHERE email = '$email' OR phone = '$phone' LIMIT 1";
@@ -22,17 +25,17 @@ if (!empty($data->name) && !empty($data->email) && !empty($data->phone) && !empt
     if ($result->num_rows > 0) {
         echo json_encode(["status" => "error", "message" => "Email hoặc Số điện thoại đã tồn tại"]);
     } else {
-        // 2. BĂM MẬT KHẨU (Bảo mật tuyệt đối)
+        // 2. BĂM MẬT KHẨU
         $hashed_password = password_hash($password_raw, PASSWORD_BCRYPT);
 
-        // 3. LƯU VÀO DATABASE
+        // 3. LƯU VÀO DATABASE (Với biến $role đã được xử lý ở trên)
         $sql = "INSERT INTO users (name, email, phone, password, role) 
                 VALUES ('$name', '$email', '$phone', '$hashed_password', '$role')";
         
         if ($conn->query($sql) === TRUE) {
             echo json_encode([
                 "status" => "success", 
-                "message" => "Đăng ký thành công"
+                "message" => "Đăng ký thành công tài khoản $role"
             ]);
         } else {
             echo json_encode(["status" => "error", "message" => "Lỗi SQL: " . $conn->error]);

@@ -96,7 +96,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> register(String name, String email, String phone, String password) async {
+  Future<bool> register(String name, String email, String phone, String password, String role) async {
   _isLoading = true;
   _errorMessage = '';
   notifyListeners();
@@ -110,7 +110,7 @@ class AuthProvider with ChangeNotifier {
           "email": email,
           "phone": phone,
           "password": password,
-          "role": "customer" // Mặc định là khách hàng
+          "role": role
         }),
       ).timeout(const Duration(seconds: 10)); // Quá 10 giây sẽ tự ngắt và báo lỗi
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/utils/app_noti.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 
@@ -19,6 +21,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
 
+  String _selectedRole = 'customer'; 
+
   void _handleRegister() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -28,13 +32,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _emailController.text.trim(),
         _phoneController.text.trim(),
         _passwordController.text.trim(),
+        _selectedRole,
       );
 
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đăng ký thành công! Vui lòng đăng nhập.'), backgroundColor: Colors.green),
-          );
+          AppNoti.show(context, "Đăng ký thành công! Vui lòng đăng nhập.", type: NotiType.success);
           Navigator.pop(context); // Quay lại màn hình Login
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -100,6 +103,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 validator: (val) => !val!.contains("@") ? "Email không hợp lệ" : null,
               ),
               const SizedBox(height: 16),
+
+              _buildLabel("Bạn muốn đăng ký với vai trò:"),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: const Text("Khách", style: TextStyle(fontSize: 14)),
+                        value: 'customer',
+                        groupValue: _selectedRole,
+                        activeColor: AppTheme.bronzeGold,
+                        onChanged: (value) => setState(() => _selectedRole = value!),
+                      ),
+                    ),
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: const Text("Tài xế", style: TextStyle(fontSize: 14)),
+                        value: 'driver',
+                        groupValue: _selectedRole,
+                        activeColor: AppTheme.bronzeGold,
+                        onChanged: (value) => setState(() => _selectedRole = value!),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
               // Mật khẩu
               _buildLabel("Mật khẩu"),
