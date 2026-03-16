@@ -144,6 +144,27 @@ class AuthProvider with ChangeNotifier {
     notifyListeners(); // Thông báo để toàn bộ giao diện (Home, Profile) đổi tên ngay
   }
   
+  Future<bool> becomeDriver(int userId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("${ApiEndpoints.baseUrl}/driver/become_driver.php"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"user_id": userId}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (data['status'] == 'success') {
+        // Cập nhật lại user hiện tại với role mới là 'driver'
+        _currentUser = UserModel.fromJson(data['data']);
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   void logout() {
     _currentUser = null;
     _errorMessage = '';
