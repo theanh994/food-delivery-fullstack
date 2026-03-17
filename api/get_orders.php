@@ -6,7 +6,14 @@ require_once 'db_connect.php';
 $customer_id = $_GET['customer_id'];
 
 // Lấy danh sách đơn hàng
-$sql = "SELECT * FROM orders WHERE customer_id = $customer_id ORDER BY created_at DESC";
+$sql = "SELECT o.*, 
+               u.name as driver_name, 
+               u.phone as driver_phone, 
+               u.avatar as driver_avatar
+        FROM orders o 
+        LEFT JOIN users u ON o.driver_id = u.id 
+        WHERE o.customer_id = $customer_id 
+        ORDER BY o.created_at DESC";
 $result = $conn->query($sql);
 
 $orders = [];

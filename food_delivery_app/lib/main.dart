@@ -8,6 +8,8 @@ import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/address_provider.dart';
 import 'providers/driver_provider.dart';
+import 'providers/driver_order_provider.dart';
+import 'providers/chat_provider.dart';
 
 import 'features/auth/splash_screen.dart';
 import 'features/auth/login_screen.dart';
@@ -17,7 +19,8 @@ import 'features/auth/forgot_password_screen.dart';
 import 'features/customer/screens/cart_screen.dart';
 import 'features/notification/screens/notification_screen.dart';
 import 'features/order/screens/order_history_screen.dart';
-
+  
+import 'features/driver/screens/driver_dashboard_screen.dart';
 import 'features/driver/screens/driver_pending_screen.dart';
 import 'features/driver/screens/driver_registration_screen.dart';
 
@@ -47,6 +50,8 @@ class FoodDeliveryApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => AddressProvider()),
         ChangeNotifierProvider(create: (_) => DriverProvider()),
+        ChangeNotifierProvider(create: (_) => DriverOrderProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
         title: 'Đặt Đồ Ăn Single-Vendor',
@@ -70,8 +75,7 @@ class FoodDeliveryApp extends StatelessWidget {
           '/order_history': (context) => const OrderHistoryScreen(),
           '/notifications': (context) => const NotificationScreen(),
 
-          '/driver_home': (context) =>
-              const PlaceholderScreen(title: 'Trang chủ Tài xế'),
+          '/driver_home': (context) => const DriverDashboardScreen(),
           '/driver_pending': (context) => const DriverPendingScreen(),
           '/driver_registration': (context) => const DriverRegistrationScreen(),
           '/support': (context) => const SupportScreen(),

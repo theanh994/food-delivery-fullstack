@@ -32,6 +32,10 @@ class OrderModel {
   final String status;
   final String address;
   final String? note;
+  final int? driverId; // Thêm trường này
+  final String? driverName;
+  final String? driverPhone;
+  final String? driverAvatar;
   final DateTime createdAt;
   final List<OrderDetailModel> details;
 
@@ -43,6 +47,10 @@ class OrderModel {
     required this.status,
     required this.address,
     this.note,
+    this.driverId,
+    this.driverName,
+    this.driverPhone,
+    this.driverAvatar,
     required this.createdAt,
     required this.details,
   });
@@ -57,6 +65,10 @@ class OrderModel {
       address: json['delivery_address'],
       note: json['order_note'],
       createdAt: DateTime.parse(json['created_at']),
+      driverId: json['driver_id'] != null ? int.parse(json['driver_id'].toString()) : null,
+      driverName: json['driver_name'],
+      driverPhone: json['driver_phone'],
+      driverAvatar: json['driver_avatar'],
       details: (json['details'] as List)
           .map((d) => OrderDetailModel.fromJson(d))
           .toList(),

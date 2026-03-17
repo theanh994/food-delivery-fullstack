@@ -16,8 +16,17 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    final userId = context.read<AuthProvider>().currentUser!.id;
-    Future.microtask(() => context.read<OrderProvider>().fetchMyOrders(userId));
+    // Sử dụng addPostFrameCallback để tránh lỗi setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshData();
+    });
+  }
+
+  Future<void> _refreshData() async {
+    final userId = context.read<AuthProvider>().currentUser?.id;
+    if (userId != null) {
+      await context.read<OrderProvider>().fetchMyOrders(userId);
+    }
   }
 
   @override
@@ -26,7 +35,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Đơn hàng của tôi"),
+          title: const Text("ĐƠN HÀNG CỦA TÔI"),
+          centerTitle: true,
           bottom: const TabBar(
             tabs: [
               Tab(text: "Đang đến"),
@@ -35,11 +45,16 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             labelColor: AppTheme.bronzeGold,
             unselectedLabelColor: Colors.grey,
             indicatorColor: AppTheme.bronzeGold,
+            indicatorWeight: 3,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
+        // Chuyển RefreshIndicator vào trong ListView để nó nhạy hơn
         body: Consumer<OrderProvider>(
           builder: (context, prov, _) {
-            if (prov.isLoading) return const Center(child: CircularProgressIndicator());
+            if (prov.isLoading && prov.orders.isEmpty) {
+              return const Center(child: CircularProgressIndicator(color: AppTheme.bronzeGold));
+            }
             
             return TabBarView(
               children: [
@@ -53,12 +68,36 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Widget _buildOrderList(orders) {
-    if (orders.isEmpty) return const Center(child: Text("Chưa có đơn hàng nào"));
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: orders.length,
-      itemBuilder: (context, index) => OrderCard(order: orders[index]),
+  Widget _buildOrderList(List orders) {
+    // ĐƯA REFRESH INDICATOR VÀO ĐÂY
+    return RefreshIndicator(
+      color: AppTheme.bronzeGold,
+      backgroundColor: AppTheme.darkPurple,
+      onRefresh: _refreshData, // Gọi hàm tải lại dữ liệu
+      child: ListView.builder(
+        // AlwaysScrollableScrollPhysics: Giúp kéo được ngay cả khi danh sách trống
+        physics: const AlwaysScrollableScrollPhysics(), 
+        padding: const EdgeInsets.all(16),
+        itemCount: orders.isEmpty ? 1 : orders.length,
+        itemBuilder: (context, index) {
+          if (orders.isEmpty) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.5,
+              alignment: Alignment.center,
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.receipt_long_outlined, size: 50, color: Colors.grey),
+                  SizedBox(height: 10),
+                  Text("Chưa có đơn hàng nào", style: TextStyle(color: Colors.grey)),
+                  Text("Vuốt xuống để cập nhật", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            );
+          }
+          return OrderCard(order: orders[index]);
+        },
+      ),
     );
   }
 }
