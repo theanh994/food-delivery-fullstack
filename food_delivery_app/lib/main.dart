@@ -26,6 +26,7 @@ import 'features/driver/screens/driver_main_screen.dart';
 import 'features/driver/screens/driver_pending_screen.dart';
 import 'features/driver/screens/driver_registration_screen.dart';
 import 'features/driver/screens/driver_wallet_screen.dart';
+import 'features/driver/screens/driver_earnings_screen.dart';
 
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/edit_profile_screen.dart';
@@ -84,6 +85,7 @@ class FoodDeliveryApp extends StatelessWidget {
           '/driver_registration': (context) => const DriverRegistrationScreen(),
           '/support': (context) => const SupportScreen(),
           '/driver_wallet': (context) => const DriverWalletScreen(),
+          '/driver_earnings': (context) => const DriverEarningsScreen(),
         },
       ),
     );
