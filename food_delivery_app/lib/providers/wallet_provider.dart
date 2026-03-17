@@ -1,0 +1,29 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../core/constants/api_endpoints.dart';
+
+class WalletProvider with ChangeNotifier {
+  double _balance = 0.0;
+  List<dynamic> _transactions = [];
+  bool _isLoading = false;
+
+  double get balance => _balance;
+  List<dynamic> get transactions => _transactions;
+  bool get isLoading => _isLoading;
+
+  Future<void> fetchWallet(int driverId) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final res = await http.get(Uri.parse("${ApiEndpoints.baseUrl}/driver/get_wallet.php?driver_id=$driverId"));
+      final data = jsonDecode(res.body);
+      if (data['status'] == 'success') {
+        _balance = double.parse(data['balance'].toString());
+        _transactions = data['transactions'];
+      }
+    } catch (e) { print(e); }
+    _isLoading = false;
+    notifyListeners();
+  }
+}

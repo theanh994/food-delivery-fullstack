@@ -94,36 +94,53 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGET 1: DÀNH CHO NGƯỜI ĐÃ LÀ TÀI XẾ (DRIVER MODE) ---
+  // --- WIDGET 1: DÀNH CHO NGƯỜI ĐÃ LÀ TÀI XẾ (Hỗ trợ đổi qua lại) ---
   Widget _buildSwitchToDriverCard(BuildContext context) {
+    // Kiểm tra xem màn hình hiện tại có phải thuộc luồng Driver không
+    // Chúng ta dựa vào việc kiểm tra Route hiện tại là /driver_home hay /customer_home
+    final bool isCurrentlyInDriverUI = ModalRoute.of(context)?.settings.name == '/driver_home';
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppTheme.darkPurple, Color(0xFF2e1065)],
+        gradient: LinearGradient(
+          colors: isCurrentlyInDriverUI 
+            ? [AppTheme.bronzeGold, const Color(0xFF8D6E63)] // Màu khác đi chút khi ở bản Driver
+            : [AppTheme.darkPurple, const Color(0xFF2e1065)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: AppTheme.darkPurple.withValues(alpha: 0.3), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10)],
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("CHẾ ĐỘ TÀI XẾ",
-                      style: TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text("Dành riêng cho đối tác", style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  Text(
+                    isCurrentlyInDriverUI ? "CHẾ ĐỘ KHÁCH HÀNG" : "CHẾ ĐỘ TÀI XẾ",
+                    style: TextStyle(
+                      color: isCurrentlyInDriverUI ? AppTheme.darkPurple : AppTheme.bronzeGold, 
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 16
+                    )
+                  ),
+                  Text(
+                    isCurrentlyInDriverUI ? "Quay lại đặt món ăn" : "Dành riêng cho đối tác", 
+                    style: TextStyle(
+                      color: isCurrentlyInDriverUI ? Colors.black54 : Colors.white70, 
+                      fontSize: 11
+                    )
+                  ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.local_taxi, color: AppTheme.bronzeGold),
+              Icon(
+                isCurrentlyInDriverUI ? Icons.restaurant : Icons.local_taxi, 
+                color: isCurrentlyInDriverUI ? AppTheme.darkPurple : AppTheme.bronzeGold
               ),
             ],
           ),
@@ -132,26 +149,34 @@ class ProfileScreen extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () async {
-                // Kiểm tra trạng thái hồ sơ trước khi cho vào
-                final userId = context.read<AuthProvider>().currentUser!.id;
-                await context.read<DriverProvider>().checkDriverStatus(userId);
-                
-                if (context.mounted) {
-                  final status = context.read<DriverProvider>().status;
-                  if (status == 'approved') {
-                    Navigator.pushReplacementNamed(context, '/driver_home');
-                  } else if (status == 'pending') {
-                    Navigator.pushNamed(context, '/driver_pending');
-                  } else {
-                    Navigator.pushNamed(context, '/driver_registration');
+                if (isCurrentlyInDriverUI) {
+                  // Đang ở giao diện Tài xế -> Chuyển về Khách
+                  Navigator.pushReplacementNamed(context, '/customer_home');
+                } else {
+                  // Đang ở giao diện Khách -> Chuyển sang Tài xế (Cần check hồ sơ)
+                  final userId = context.read<AuthProvider>().currentUser!.id;
+                  await context.read<DriverProvider>().checkDriverStatus(userId);
+                  
+                  if (context.mounted) {
+                    final status = context.read<DriverProvider>().status;
+                    if (status == 'approved') {
+                      Navigator.pushReplacementNamed(context, '/driver_home');
+                    } else if (status == 'pending') {
+                      Navigator.pushNamed(context, '/driver_pending');
+                    } else {
+                      Navigator.pushNamed(context, '/driver_registration');
+                    }
                   }
                 }
               },
               icon: const Icon(Icons.swap_horiz),
-              label: const Text("CHUYỂN SANG GIAO DIỆN NHẬN ĐƠN"),
+              label: Text(
+                isCurrentlyInDriverUI ? "CHUYỂN SANG GIAO DIỆN KHÁCH" : "CHUYỂN SANG GIAO DIỆN NHẬN ĐƠN",
+                style: const TextStyle(fontWeight: FontWeight.bold)
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.bronzeGold,
-                foregroundColor: AppTheme.darkPurple,
+                backgroundColor: isCurrentlyInDriverUI ? AppTheme.darkPurple : AppTheme.bronzeGold,
+                foregroundColor: isCurrentlyInDriverUI ? AppTheme.bronzeGold : AppTheme.darkPurple,
                 padding: const EdgeInsets.symmetric(vertical: 15),
               ),
             ),
@@ -160,7 +185,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-
+  
   // --- WIDGET 2: DÀNH CHO KHÁCH HÀNG (BECOME DRIVER) ---
   Widget _buildBecomeDriverCard(BuildContext context) {
     return Container(

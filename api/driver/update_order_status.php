@@ -5,40 +5,59 @@ header("Access-Control-Allow-Methods: POST");
 
 require_once '../db_connect.php';
 
-// 1. Nhận dữ liệu từ Flutter
 $data = json_decode(file_get_contents("php://input"));
 
 if (!empty($data->order_id) && !empty($data->status)) {
     $order_id = $conn->real_escape_string($data->order_id);
     $new_status = $conn->real_escape_string($data->status);
 
-    // 2. Cập nhật trạng thái đơn hàng trong bảng orders
-    $sql = "UPDATE orders SET status = '$new_status' WHERE id = $order_id";
+    // --- BƯỚC 1: BẮT ĐẦU TRANSACTION (GIAO DỊCH) ---
+    $conn->begin_transaction();
 
-    if ($conn->query($sql)) {
+    try {
+        // 1. Cập nhật trạng thái đơn hàng
+        $sql_update = "UPDATE orders SET status = '$new_status' WHERE id = $order_id";
+        if (!$conn->query($sql_update)) {
+            throw new Exception("Lỗi cập nhật trạng thái đơn hàng");
+        }
+
+        // 2. Lấy thông tin đơn hàng để xử lý tiền và thông báo
+        $order_query = $conn->query("SELECT customer_id, driver_id, shipping_fee FROM orders WHERE id = $order_id");
+        $order_info = $order_query->fetch_assoc();
         
-        // 3. TỰ ĐỘNG TẠO THÔNG BÁO CHO KHÁCH HÀNG
-        // Lấy customer_id của đơn hàng này
-        $order_info = $conn->query("SELECT customer_id FROM orders WHERE id = $order_id")->fetch_assoc();
-        $customer_id = $order_info['customer_id'];
+        if (!$order_info) {
+            throw new Exception("Không tìm thấy thông tin đơn hàng");
+        }
 
+        $customer_id = $order_info['customer_id'];
+        $driver_id = $order_info['driver_id'];
+        $amount = (float)$order_info['shipping_fee'];
+
+        // --- BƯỚC 2: XỬ LÝ TÀI CHÍNH KHI ĐƠN HOÀN THÀNH ---
+        if ($new_status == 'completed' && !empty($driver_id)) {
+            // A. Cộng tiền vào ví tài xế (Nếu chưa có ví thì tạo mới)
+            $sql_wallet = "INSERT INTO driver_wallets (driver_id, balance) VALUES ($driver_id, $amount) 
+                           ON DUPLICATE KEY UPDATE balance = balance + $amount";
+            if (!$conn->query($sql_wallet)) {
+                throw new Exception("Lỗi cập nhật số dư ví tài xế");
+            }
+
+            // B. Ghi lại lịch sử giao dịch vào bảng wallet_transactions
+            $desc = "Thu nhập từ đơn hàng #EPC-$order_id";
+            $sql_log = "INSERT INTO wallet_transactions (driver_id, amount, type, description) 
+                        VALUES ($driver_id, $amount, 'earning', '$desc')";
+            if (!$conn->query($sql_log)) {
+                throw new Exception("Lỗi ghi lịch sử giao dịch");
+            }
+        }
+
+        // --- BƯỚC 3: TỰ ĐỘNG TẠO THÔNG BÁO CHO KHÁCH HÀNG ---
         $noti_title = "Cập nhật đơn hàng";
         $noti_msg = "";
-
-        // Soạn nội dung dựa trên trạng thái mới
         switch ($new_status) {
-            case 'delivering':
-                $noti_msg = "Tài xế đã lấy món và đang trên đường giao đến bạn.";
-                break;
-            case 'completed':
-                $noti_msg = "Đơn hàng #EPC-$order_id đã được giao thành công. Chúc bạn ngon miệng!";
-                break;
-            case 'picking':
-                $noti_msg = "Tài xế đang kiểm tra món ăn tại nhà hàng.";
-                break;
-            default:
-                $noti_msg = "Đơn hàng của bạn đã chuyển sang trạng thái: $new_status";
-                break;
+            case 'delivering': $noti_msg = "Tài xế đã lấy món và đang trên đường giao đến bạn."; break;
+            case 'completed': $noti_msg = "Đơn hàng #EPC-$order_id đã được giao thành công. Chúc bạn ngon miệng!"; break;
+            case 'picking': $noti_msg = "Tài xế đang kiểm tra món ăn tại nhà hàng."; break;
         }
 
         if (!empty($noti_msg)) {
@@ -46,15 +65,24 @@ if (!empty($data->order_id) && !empty($data->status)) {
             $conn->query($sql_noti);
         }
 
+        // --- BƯỚC 4: HOÀN TẤT VÀ LƯU DỮ LIỆU (COMMIT) ---
+        $conn->commit();
+
         echo json_encode([
             "status" => "success",
-            "message" => "Đã cập nhật trạng thái đơn hàng lên: $new_status"
+            "message" => "Cập nhật thành công đơn hàng và ví thu nhập"
         ]);
-    } else {
-        echo json_encode(["status" => "error", "message" => "Lỗi SQL: " . $conn->error]);
+
+    } catch (Exception $e) {
+        // NẾU CÓ BẤT KỲ LỖI NÀO -> HỦY BỎ TẤT CẢ CÁC LỆNH TRÊN
+        $conn->rollback();
+        echo json_encode([
+            "status" => "error",
+            "message" => $e->getMessage()
+        ]);
     }
 } else {
-    echo json_encode(["status" => "error", "message" => "Dữ liệu gửi lên không đầy đủ"]);
+    echo json_encode(["status" => "error", "message" => "Dữ liệu không đầy đủ"]);
 }
 
 $conn->close();

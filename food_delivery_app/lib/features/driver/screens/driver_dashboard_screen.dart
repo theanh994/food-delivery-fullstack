@@ -16,37 +16,46 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Chốt chặn an toàn: Đợi build xong mới kiểm tra đơn hàng
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Lưu lại context vào biến local hoặc dùng mounted check
+    
+    // --- SỬA TẠI ĐÂY: Dùng một trì hoãn siêu nhỏ (Zero delay) để tách biệt luồng build ---
+    Future.delayed(Duration.zero, () {
       if (!mounted) return;
-
-      final auth = Provider.of<AuthProvider>(context, listen: false);
-      final driverProv = Provider.of<DriverOrderProvider>(context, listen: false);
-      
-      final driverId = auth.currentUser!.id;
-
-      // 1. Kiểm tra đơn dở dang
-      bool hasActive = await driverProv.fetchActiveOrder(driverId);
-      
-      // 2. Sau khi await, BẮT BUỘC phải check mounted trước khi Navigator
-      if (!mounted) return;
-
-      if (hasActive) {
-        Navigator.pushReplacement(
-          context, 
-          MaterialPageRoute(builder: (_) => ActiveOrderScreen(order: driverProv.currentOrder))
-        );
-      } else {
-        await driverProv.fetchAvailableOrders();
-      }
+      _checkAndLoadData();
     });
+  }
+
+  Future<void> _checkAndLoadData() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final driverProv = Provider.of<DriverOrderProvider>(context, listen: false);
+    
+    if (auth.currentUser == null) return;
+    final driverId = auth.currentUser!.id;
+
+    // 1. Kiểm tra đơn dở dang
+    bool hasActive = await driverProv.fetchActiveOrder(driverId);
+    
+    if (!mounted) return;
+
+    if (hasActive) {
+      // Nếu có đơn, đẩy sang màn hình Active và xóa lịch sử điều hướng của Tab này
+      Navigator.pushReplacement(
+        context, 
+        MaterialPageRoute(builder: (_) => ActiveOrderScreen(order: driverProv.currentOrder))
+      );
+    } else {
+      // Nếu không mới load danh sách
+      await driverProv.fetchAvailableOrders();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<DriverOrderProvider>();
-    final driverId = context.read<AuthProvider>().currentUser!.id;
+    final currentUser = context.watch<AuthProvider>().currentUser;
+
+    if (currentUser == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
+    final driverId = currentUser.id;
 
     return Scaffold(
       appBar: AppBar(
