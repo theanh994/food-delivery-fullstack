@@ -17,17 +17,27 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _msgC = TextEditingController();
+  late ChatProvider _chatProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Lưu lại tham chiếu của Provider khi Widget còn đang hoạt động
+    _chatProvider = Provider.of<ChatProvider>(context, listen: false);
+  }
 
   @override
   void initState() {
     super.initState();
     // Bắt đầu chế độ Real-time (3s load 1 lần)
-    Future.microtask(() => context.read<ChatProvider>().startPolling(widget.orderId));
+    Future.microtask(() => _chatProvider.startPolling(widget.orderId));
   }
 
   @override
   void dispose() {
-    context.read<ChatProvider>().stopPolling();
+    // --- BƯỚC 2: DÙNG BIẾN ĐÃ LƯU THAY VÌ GỌI context.read ---
+    _chatProvider.stopPolling(); 
+    _msgC.dispose();
     super.dispose();
   }
 

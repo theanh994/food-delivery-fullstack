@@ -16,14 +16,31 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Chốt chặn an toàn: Đợi build xong mới load đơn hàng
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadOrders();
-    });
-  }
+    // Chốt chặn an toàn: Đợi build xong mới kiểm tra đơn hàng
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Lưu lại context vào biến local hoặc dùng mounted check
+      if (!mounted) return;
 
-  void _loadOrders() {
-    Future.microtask(() => context.read<DriverOrderProvider>().fetchAvailableOrders());
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final driverProv = Provider.of<DriverOrderProvider>(context, listen: false);
+      
+      final driverId = auth.currentUser!.id;
+
+      // 1. Kiểm tra đơn dở dang
+      bool hasActive = await driverProv.fetchActiveOrder(driverId);
+      
+      // 2. Sau khi await, BẮT BUỘC phải check mounted trước khi Navigator
+      if (!mounted) return;
+
+      if (hasActive) {
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (_) => ActiveOrderScreen(order: driverProv.currentOrder))
+        );
+      } else {
+        await driverProv.fetchAvailableOrders();
+      }
+    });
   }
 
   @override

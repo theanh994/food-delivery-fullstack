@@ -39,15 +39,47 @@ class DriverOrderProvider with ChangeNotifier {
     return false;
   }
 
-  Future<void> updateStatus(int orderId, String newStatus) async {
-    await http.post(
-      Uri.parse("${ApiEndpoints.baseUrl}/update_order_status.php"),
-      body: jsonEncode({"order_id": orderId, "status": newStatus})
-    );
-    if (_currentOrder != null) {
-      _currentOrder['status'] = newStatus;
-      if (newStatus == 'completed') _currentOrder = null; // Giao xong thì xóa đơn hiện tại
-      notifyListeners();
+  Future<bool> fetchActiveOrder(int driverId) async {
+    try {
+      final res = await http.get(Uri.parse("${ApiEndpoints.baseUrl}/driver/get_active_order.php?driver_id=$driverId"));
+      final data = jsonDecode(res.body);
+      if (data['status'] == 'success') {
+        _currentOrder = data['data'];
+        notifyListeners();
+        return true; // Có đơn đang chạy
+      }
+      _currentOrder = null;
+      return false; // Không có đơn
+    } catch (e) { return false; }
+  }
+
+  Future<bool> updateStatus(int orderId, String newStatus) async {
+    try {
+      final res = await http.post(
+        Uri.parse("${ApiEndpoints.baseUrl}/driver/update_order_status.php"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"order_id": orderId, "status": newStatus})
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data['status'] == 'success') {
+          // --- CHỖ QUAN TRỌNG NHẤT: Cập nhật biến local ngay lập tức ---
+          if (newStatus == 'completed') {
+            _currentOrder = null; // Xóa đơn dở dang
+          } else {
+            if (_currentOrder != null) {
+              _currentOrder['status'] = newStatus; // Cập nhật 'delivering'
+            }
+          }
+          notifyListeners(); // Báo cho UI vẽ lại nút bấm
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      debugPrint("Lỗi updateStatus: $e");
+      return false;
     }
   }
 }
