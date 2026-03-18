@@ -19,11 +19,21 @@ if (!empty($data->email) && !empty($data->password)) {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
-        // Kiểm tra mật khẩu (Giả sử lúc đăng ký bạn dùng password_hash)
-        // Nếu test thủ công trong DB chưa mã hóa, dùng: if($password == $user['password'])
+        // Kiểm tra mật khẩu
         if (password_verify($password, $user['password'])) {
             
-            // Xóa password khỏi response để bảo mật
+            // --- [MỚI CẬP NHẬT]: CHỐT CHẶN KIỂM TRA TÀI KHOẢN BỊ KHÓA ---
+            // Kiểm tra xem cột is_banned có tồn tại và bằng 1 hay không
+            if (isset($user['is_banned']) && $user['is_banned'] == 1) {
+                echo json_encode([
+                    "status" => "error", 
+                    "message" => "Tài khoản của bạn đã bị khóa do vi phạm chính sách của hệ thống."
+                ]);
+                exit; // Dừng chương trình ngay lập tức, không cho đăng nhập
+            }
+            // -----------------------------------------------------------
+
+            // Xóa password khỏi response để bảo mật khi truyền về Flutter
             unset($user['password']);
 
             echo json_encode([
