@@ -8,6 +8,7 @@ import '../../../providers/address_provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_noti.dart';
+import '../../../core/utils/format_utils.dart'; // Thêm dòng này vào nhóm import
 
 import '../../../data/models/cart_item.dart';
 import '../widgets/edit_cart_item_sheet.dart';
@@ -256,7 +257,7 @@ class _CartScreenState extends State<CartScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("${item.totalItemPrice.toInt()}đ", 
+                    Text(FormatUtils.formatMoney(item.totalItemPrice), 
                       style: const TextStyle(color: AppTheme.darkPurple, fontWeight: FontWeight.bold)),
                     
                     Container(
@@ -300,10 +301,10 @@ class _CartScreenState extends State<CartScreen> {
       decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(15)),
       child: Column(
         children:[
-          _summaryRow("Tạm tính", "${cart.subtotal.toInt()}đ"),
-          _summaryRow("Phí giao hàng", "${cart.shippingFee.toInt()}đ"),
+          _summaryRow("Tạm tính", FormatUtils.formatMoney(cart.subtotal)),
+          _summaryRow("Phí giao hàng", FormatUtils.formatMoney(cart.shippingFee)),
           const Divider(),
-          _summaryRow("Tổng thanh toán", "${cart.totalAmount.toInt()}đ", isTotal: true),
+          _summaryRow("Tổng thanh toán", FormatUtils.formatMoney(cart.totalAmount), isTotal: true),
         ],
       ),
     );
@@ -345,7 +346,8 @@ class _CartScreenState extends State<CartScreen> {
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.darkPurple, minimumSize: const Size(double.infinity, 56)),
           child: orderProv.isPlacingOrder 
             ? const CircularProgressIndicator(color: Colors.white)
-            : Text("Đặt hàng ngay • ${cart.totalAmount.toInt()}đ", style: const TextStyle(color: AppTheme.bronzeGold, fontSize: 16, fontWeight: FontWeight.bold)),
+            : Text("Đặt hàng ngay • ${FormatUtils.formatMoney(cart.totalAmount)}", 
+                style: const TextStyle(color: AppTheme.bronzeGold, fontSize: 16, fontWeight: FontWeight.bold)),
         ),
       ),
     );

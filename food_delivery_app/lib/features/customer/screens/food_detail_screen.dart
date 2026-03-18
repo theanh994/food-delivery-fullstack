@@ -4,6 +4,7 @@ import '../../../data/models/food_model.dart';
 import '../../../data/models/cart_item.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/app_noti.dart';
+import '../../../core/utils/format_utils.dart'; // Thêm dòng này
 import '../../../providers/cart_provider.dart';
 
 class FoodDetailScreen extends StatefulWidget {
@@ -124,7 +125,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             bool isSelected = _userSelections[group.name]?.contains(option.name) ?? false;
             
             return ChoiceChip(
-              label: Text("${option.name} ${option.extraPrice > 0 ? '(+${option.extraPrice.toInt()}đ)' : ''}"),
+              label: Text("${option.name} ${option.extraPrice > 0 ? '(+${FormatUtils.formatMoney(option.extraPrice)})' : ''}"),
               selected: isSelected,
               selectedColor: AppTheme.bronzeGold,
               labelStyle: TextStyle(
@@ -188,7 +189,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(child: Text(widget.food.name, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold))),
-                Text("${currentPrice.toInt()}đ", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.darkPurple)),
+                Text(FormatUtils.formatMoney(currentPrice), 
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.darkPurple)),
               ],
             ),
             const SizedBox(height: 15),
@@ -297,8 +299,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
         Navigator.pop(context);
       },
       // ...
-      child: Text("THÊM • ${(totalPrice * _quantity).toInt()}đ", style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)),
-    );
+      child: Text("THÊM • ${FormatUtils.formatMoney(totalPrice * _quantity)}", 
+        style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold, fontSize: 16)),    );
   }
 
   // --- FIX CẢNH BÁO withOpacity ---

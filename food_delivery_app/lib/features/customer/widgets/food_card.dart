@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/food_model.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/format_utils.dart';
 
 class FoodCard extends StatelessWidget {
   final FoodModel food;
@@ -51,7 +52,10 @@ class FoodCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("\$${food.price}", style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)),
+                      Text(
+                        FormatUtils.formatMoney(food.price), 
+                        style: const TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)
+                      ),
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(color: AppTheme.bronzeGold, borderRadius: BorderRadius.circular(8)),
