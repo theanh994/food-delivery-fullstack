@@ -18,9 +18,46 @@ class FoodProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   int get selectedCategoryId => _selectedCategoryId;
 
+  List<FoodModel> _searchResults = [];
+  bool _isSearching = false;
+  String _lastQuery = "";
+
+  List<FoodModel> get searchResults => _searchResults;
+  bool get isSearching => _isSearching;
+
   void selectCategory(int id) {
     _selectedCategoryId = id;
     notifyListeners();
+  }
+
+  Future<void> searchFoods(String query) async {
+    if (query.isEmpty) {
+      _isSearching = false;
+      _searchResults = [];
+      _lastQuery = "";
+      notifyListeners();
+      return;
+    }
+
+    _isSearching = true;
+    _lastQuery = query;
+    notifyListeners();
+
+    try {
+      final response = await http.get(
+        Uri.parse("${ApiEndpoints.baseUrl}/search_food.php?query=$query")
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 'success') {
+          _searchResults = (data['data'] as List).map((f) => FoodModel.fromJson(f)).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint("Search error: $e");
+    } finally {
+      notifyListeners();
+    }
   }
 
   Future<void> fetchMenu() async {
