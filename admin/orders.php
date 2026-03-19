@@ -51,6 +51,14 @@ include 'includes/sidebar.php';
             <div class="col-md-2 mb-2 mt-4">
                 <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> Lọc đơn</button>
             </div>
+
+            <!-- THÊM NÚT XUẤT EXCEL VÀO ĐÂY -->
+            <div class="col-md-2 mb-2 mt-4">
+                <a href="export_orders.php?status=<?= $status_filter ?>&order_date=<?= $date_filter ?>" 
+                   class="btn btn-success w-100">
+                   <i class="fas fa-file-excel"></i> Xuất Excel
+                </a>
+            </div>
             
             <?php if($status_filter != '' || $date_filter != ''): ?>
             <div class="col-md-2 mb-2 mt-4">

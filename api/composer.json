@@ -1,5 +1,6 @@
 {
     "require": {
-        "google/auth": "^1.50"
+        "google/auth": "^1.50",
+        "phpoffice/phpspreadsheet": "^5.5"
     }
 }

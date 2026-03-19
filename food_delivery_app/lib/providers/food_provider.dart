@@ -20,7 +20,6 @@ class FoodProvider with ChangeNotifier {
 
   List<FoodModel> _searchResults = [];
   bool _isSearching = false;
-  String _lastQuery = "";
 
   List<FoodModel> get searchResults => _searchResults;
   bool get isSearching => _isSearching;
@@ -34,13 +33,11 @@ class FoodProvider with ChangeNotifier {
     if (query.isEmpty) {
       _isSearching = false;
       _searchResults = [];
-      _lastQuery = "";
       notifyListeners();
       return;
     }
 
     _isSearching = true;
-    _lastQuery = query;
     notifyListeners();
 
     try {
