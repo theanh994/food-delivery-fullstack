@@ -41,6 +41,7 @@ $page_title = $page_title ?? 'Epicure Admin'; // Nhận title từ trang gọi n
                 <li class="nav-item"><a class="nav-link <?= $current_page == 'foods.php' ? 'active' : '' ?>" href="foods.php"><i class="fas fa-hamburger"></i> Thực đơn & Tùy chọn</a></li>
                 <li class="nav-item"><a class="nav-link <?= $current_page == 'withdrawals.php' ? 'active' : '' ?>" href="withdrawals.php"><i class="fas fa-wallet"></i> Yêu cầu Rút tiền</a></li>
                 <li class="nav-item"><a class="nav-link <?= $current_page == 'reviews.php' ? 'active' : '' ?>" href="reviews.php"><i class="fas fa-star"></i> Đánh giá Món ăn</a></li>
+                <li class="nav-item"><a class="nav-link <?= $current_page == 'vouchers.php' ? 'active' : '' ?>" href="vouchers.php"><i class="fas fa-ticket-alt"></i> Quản lý Voucher</a></li>
             </ul>
         </div>
 

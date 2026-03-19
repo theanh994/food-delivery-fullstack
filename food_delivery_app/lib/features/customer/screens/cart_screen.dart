@@ -25,6 +25,7 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   final _addressController = TextEditingController();
   final _noteController = TextEditingController();
+  final _voucherController = TextEditingController();
 
   // Tự động lấy danh sách địa chỉ khi vào giỏ hàng ---
   @override
@@ -158,6 +159,58 @@ class _CartScreenState extends State<CartScreen> {
                         ),
 
                         const SizedBox(height: 24),
+
+                        // Trong Column của SingleChildScrollView:
+                        _buildSectionHeader(Icons.confirmation_number_outlined, "Ưu đãi & Voucher"),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _voucherController,
+                                decoration: _inputStyle("Nhập mã giảm giá...").copyWith(
+                                  prefixIcon: const Icon(Icons.sell_outlined, size: 20),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              onPressed: () async {
+                                bool success = await cart.applyVoucher(_voucherController.text.trim());
+                                if (mounted) {
+                                  if (success) {
+                                    AppNoti.show(context, "Đã áp dụng mã giảm giá!", type: NotiType.success);
+                                  } else {
+                                    AppNoti.show(context, "Mã không hợp lệ hoặc không đủ điều kiện", type: NotiType.error);
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.darkPurple, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
+                              child: const Text("ÁP DỤNG", style: TextStyle(color: AppTheme.bronzeGold, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                        if (cart.appliedVoucherCode != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                const SizedBox(width: 5),
+                                Text("Đang sử dụng mã: ${cart.appliedVoucherCode}", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: () {
+                                    cart.removeVoucher();
+                                    _voucherController.clear();
+                                  },
+                                  child: const Text("Xóa", style: TextStyle(color: Colors.red, fontSize: 12)),
+                                )
+                              ],
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+
                         _buildSummary(cart),
                       ],
                     ),
@@ -300,11 +353,24 @@ class _CartScreenState extends State<CartScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(15)),
       child: Column(
-        children:[
+        children: [
           _summaryRow("Tạm tính", FormatUtils.formatMoney(cart.subtotal)),
           _summaryRow("Phí giao hàng", FormatUtils.formatMoney(cart.shippingFee)),
+          
+          // NẾU CÓ GIẢM GIÁ THÌ HIỆN DÒNG MÀU XANH
+          if (cart.discountAmount > 0)
+            _summaryRow(
+              "Giảm giá Voucher", 
+              "-${FormatUtils.formatMoney(cart.discountAmount)}", 
+              isDiscount: true // <--- Bật màu xanh lá
+            ),
+          
           const Divider(),
-          _summaryRow("Tổng thanh toán", FormatUtils.formatMoney(cart.totalAmount), isTotal: true),
+          _summaryRow(
+            "Tổng thanh toán", 
+            FormatUtils.formatMoney(cart.totalAmount), 
+            isTotal: true // <--- Bật màu tím và chữ to
+          ),
         ],
       ),
     );
@@ -365,12 +431,40 @@ class _CartScreenState extends State<CartScreen> {
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
   );
   
-  Widget _summaryRow(String label, String value, {bool isTotal = false}) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children:[
-      Text(label, style: TextStyle(fontWeight: isTotal ? FontWeight.bold : FontWeight.normal, fontSize: isTotal ? 18 : 14)),
-      Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: isTotal ? 20 : 14, color: isTotal ? AppTheme.darkPurple : Colors.black)),
-    ]),
-  );
-
+  Widget _summaryRow(String label, String value, {bool isTotal = false, bool isDiscount = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+        children: [
+          // Nhãn (Tạm tính, Phí ship, Giảm giá...)
+          Text(
+            label, 
+            style: TextStyle(
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal, 
+              fontSize: isTotal ? 18 : 14,
+              // Nếu là giảm giá thì nhãn cũng hiện màu xanh nhẹ
+              color: isDiscount ? Colors.green.shade700 : Colors.black87,
+            )
+          ),
+          
+          // Giá trị tiền
+          Text(
+            value, 
+            style: TextStyle(
+              fontWeight: FontWeight.bold, 
+              fontSize: isTotal ? 20 : 14, 
+              // ĐỔI MÀU DỰA TRÊN LOẠI DÒNG:
+              // 1. Tổng tiền -> Tím thẫm
+              // 2. Giảm giá -> Xanh lá
+              // 3. Mặc định -> Đen
+              color: isTotal 
+                  ? AppTheme.darkPurple 
+                  : (isDiscount ? Colors.green.shade700 : Colors.black),
+            )
+          ),
+        ],
+      ),
+    );
+  }
 }
