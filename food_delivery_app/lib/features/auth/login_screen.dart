@@ -243,8 +243,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _socialButton("Google", "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png"),
-                      _socialButton("Facebook", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/600px-Facebook_Logo_%282019%29.png"),
+                      _socialButton("Google"),
+                      _socialButton("Facebook"),
                     ],
                   )
                 ],
@@ -277,8 +277,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Widget bổ trợ cho nút Social
-  Widget _socialButton(String label, String logoUrl) {
+  // Widget bổ trợ cho nút Social (Dùng Local Assets)
+  Widget _socialButton(String label) {
+    // Tự động xác định đường dẫn ảnh dựa theo nhãn (Google hoặc Facebook)
+    String assetPath = (label == "Google") 
+        ? "assets/icons/google.png" 
+        : "assets/icons/facebook.png";
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
       decoration: BoxDecoration(
@@ -287,7 +292,12 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: Row(
         children: [
-          Image.network(logoUrl, width: 20, height: 20),
+          // DÙNG IMAGE.ASSET ĐỂ LOAD ẢNH TỪ MÁY
+          Image.asset(
+            assetPath, 
+            width: 20, 
+            height: 20,
+          ),
           const SizedBox(width: 10),
           Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../data/models/user_model.dart';
 import '../core/constants/api_endpoints.dart';
 
@@ -36,6 +37,7 @@ class AuthProvider with ChangeNotifier {
         if (data['status'] == 'success') {
           // Chuyển JSON thành Model
           _currentUser = UserModel.fromJson(data['data']);
+          updateFCMToken(_currentUser!.id); 
           _isLoading = false;
           notifyListeners();
           return true;
@@ -169,5 +171,38 @@ class AuthProvider with ChangeNotifier {
     _currentUser = null;
     _errorMessage = '';
     notifyListeners();
+  }
+
+  // ĐỒNG BỘ FCM TOKEN
+  Future<void> updateFCMToken(int userId) async {
+    try {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      // 1. Yêu cầu quyền thông báo (Standard for iOS/Android 13+)
+      await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      // 2. Lấy mã định danh duy nhất của thiết bị này
+      String? token = await messaging.getToken();
+
+      if (token != null) {
+        // 3. Gọi API lưu vào Database
+        // Đảm bảo bạn đã tạo file api/update_fcm_token.php
+        await http.post(
+          Uri.parse("${ApiEndpoints.baseUrl}/update_fcm_token.php"),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "user_id": userId,
+            "fcm_token": token
+          }),
+        );
+        debugPrint("FCM Token đã được cập nhật: $token");
+      }
+    } catch (e) {
+      debugPrint("Lỗi khi cập nhật FCM Token: $e");
+    }
   }
 }

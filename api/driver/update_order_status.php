@@ -4,6 +4,7 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
 require_once '../db_connect.php';
+require_once '../firebase_helper.php';
 
 $data = json_decode(file_get_contents("php://input"));
 
@@ -61,8 +62,20 @@ if (!empty($data->order_id) && !empty($data->status)) {
         }
 
         if (!empty($noti_msg)) {
+            // A. Lưu vào lịch sử thông báo trong DB (như cũ)
             $sql_noti = "INSERT INTO notifications (user_id, title, message) VALUES ($customer_id, '$noti_title', '$noti_msg')";
             $conn->query($sql_noti);
+
+            // B. [MỚI]: GỬI THÔNG BÁO REAL-TIME QUA FIREBASE
+            // Lấy Token của khách hàng từ bảng users
+            $user_res = $conn->query("SELECT fcm_token FROM users WHERE id = $customer_id")->fetch_assoc();
+            if (!empty($user_res['fcm_token'])) {
+                FirebaseHelper::sendNotification(
+                    $user_res['fcm_token'], 
+                    $noti_title, 
+                    $noti_msg
+                );
+            }
         }
 
         // --- BƯỚC 4: HOÀN TẤT VÀ LƯU DỮ LIỆU (COMMIT) ---

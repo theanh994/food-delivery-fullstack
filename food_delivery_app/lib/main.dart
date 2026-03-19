@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/app_noti.dart'; 
 
 import 'providers/auth_provider.dart';
 import 'providers/food_provider.dart';
@@ -36,8 +39,25 @@ import 'features/profile/screens/support_screen.dart';
 
 import 'features/home/screens/main_screen.dart';
 
-void main() {
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  // --- THÊM LOGIC LẮNG NGHE THÔNG BÁO KHI ĐANG MỞ APP ---
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    if (message.notification != null && navigatorKey.currentContext != null) {
+      // Hiện thông báo bong bóng Luxury
+      AppNoti.show(
+        navigatorKey.currentContext!, 
+        message.notification!.body ?? "", 
+        type: NotiType.info
+      );
+    }
+  });
+  // -----------------------------------------------------
+
   runApp(const FoodDeliveryApp());
 }
 
@@ -59,6 +79,7 @@ class FoodDeliveryApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => WalletProvider()),
       ],
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'Đặt Đồ Ăn Single-Vendor',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,

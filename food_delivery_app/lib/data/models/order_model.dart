@@ -27,12 +27,12 @@ class OrderDetailModel {
 class OrderModel {
   final int id;
   final double totalAmount;
-  final double shippingFee; // Dùng lạc đà (camelCase)
+  final double shippingFee; 
   final double finalAmount;
   final String status;
   final String address;
   final String? note;
-  final int? driverId; // Thêm trường này
+  final int? driverId; 
   final String? driverName;
   final String? driverPhone;
   final String? driverAvatar;
@@ -59,19 +59,21 @@ class OrderModel {
     return OrderModel(
       id: int.parse(json['id'].toString()),
       totalAmount: double.parse(json['total_amount'].toString()),
-      shippingFee: double.parse(json['shipping_fee'].toString()), // Khớp với DB
+      shippingFee: double.parse(json['shipping_fee'].toString()), 
       finalAmount: double.parse(json['final_amount'].toString()),
       status: json['status'],
       address: json['delivery_address'],
       note: json['order_note'],
       createdAt: DateTime.parse(json['created_at']),
+      details: (json['details'] as List)
+                .map((d) => OrderDetailModel.fromJson(d))
+                .toList(),
+                
       driverId: json['driver_id'] != null ? int.parse(json['driver_id'].toString()) : null,
       driverName: json['driver_name'],
       driverPhone: json['driver_phone'],
       driverAvatar: json['driver_avatar'],
-      details: (json['details'] as List)
-          .map((d) => OrderDetailModel.fromJson(d))
-          .toList(),
+      
     );
   }
 }

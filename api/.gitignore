@@ -1,0 +1,10 @@
+# Exclude Composer dependencies
+vendor/
+
+# Exclude sensitive Firebase service account file
+# (Quan trọng: Không để lộ thông tin bảo mật lên GitHub)
+service-account.json
+
+# Exclude environment files or locks if not needed
+.env
+composer.lock

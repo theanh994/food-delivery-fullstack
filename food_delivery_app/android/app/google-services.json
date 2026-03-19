@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "986785221846",
+    "project_id": "epicuredelivery",
+    "storage_bucket": "epicuredelivery.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:986785221846:android:3ef018fda1bf6e4572cd77",
+        "android_client_info": {
+          "package_name": "com.example.food_delivery_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCg8nmLMuEVl71O6G4OGQa9jZBY0fOW78Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
