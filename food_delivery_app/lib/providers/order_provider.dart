@@ -57,7 +57,7 @@ class OrderProvider with ChangeNotifier {
       }
       return null;
     } catch (e) {
-      print("Order Error: $e");
+      debugPrint("Order Error: $e");
       return null;
     } finally {
       _isPlacingOrder = false;
@@ -80,7 +80,7 @@ class OrderProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      print("Fetch Error: $e");
+      debugPrint("Fetch Error: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -103,7 +103,7 @@ class OrderProvider with ChangeNotifier {
       }
       return false;
     } catch (e) {
-      print("Cancel Error: $e");
+      debugPrint("Cancel Error: $e");
       return false;
     }
   }

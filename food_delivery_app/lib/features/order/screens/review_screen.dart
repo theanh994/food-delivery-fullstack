@@ -34,6 +34,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     );
     
     if (jsonDecode(res.body)['status'] == 'success') {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã gửi đánh giá!")));
       Navigator.pop(context);
     }

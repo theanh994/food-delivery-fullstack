@@ -26,7 +26,7 @@ class AddressProvider with ChangeNotifier {
       final res = await http.get(Uri.parse("${ApiEndpoints.baseUrl}/address_api.php?user_id=$userId"));
       final data = jsonDecode(res.body);
       if(data['status'] == 'success') _addresses = data['data'];
-    } catch (e) { print(e); }
+    } catch (e) { debugPrint(e.toString()); }
     _isLoading = false;
     notifyListeners();
   }

@@ -150,7 +150,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               sliver: foodProvider.isLoading
                   ? SliverGrid(
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 15, mainAxisSpacing: 15, childAspectRatio: 0.8),
-                      delegate: SliverChildBuilderDelegate((_, __) => const FoodSkeleton(), childCount: 4),
+                      delegate: SliverChildBuilderDelegate((_, _) => const FoodSkeleton(), childCount: 4),
                     )
                   : (foodProvider.isSearching && foodProvider.searchResults.isEmpty)
                       ? const SliverToBoxAdapter(

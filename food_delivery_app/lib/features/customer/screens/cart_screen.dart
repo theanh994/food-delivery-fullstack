@@ -33,9 +33,10 @@ class _CartScreenState extends State<CartScreen> {
     super.initState();
     final user = context.read<AuthProvider>().currentUser;
     if (user != null) {
-      Future.microtask(() => 
-        context.read<AddressProvider>().fetchAddresses(user.id)
-      );
+      Future.microtask(() {
+        if (!mounted) return;
+        context.read<AddressProvider>().fetchAddresses(user.id);
+      });
     }
   }
 
@@ -177,7 +178,7 @@ class _CartScreenState extends State<CartScreen> {
                             ElevatedButton(
                               onPressed: () async {
                                 bool success = await cart.applyVoucher(_voucherController.text.trim());
-                                if (mounted) {
+                                if (context.mounted) {
                                   if (success) {
                                     AppNoti.show(context, "Đã áp dụng mã giảm giá!", type: NotiType.success);
                                   } else {

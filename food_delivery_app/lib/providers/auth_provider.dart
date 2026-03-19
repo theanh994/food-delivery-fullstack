@@ -55,7 +55,7 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print("Lỗi Exception: $e");
+      debugPrint("Lỗi Exception: $e");
       _errorMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra XAMPP hoặc mạng!';
       _isLoading = false;
       notifyListeners();

@@ -18,7 +18,7 @@ class DriverOrderProvider with ChangeNotifier {
     try {
       final res = await http.get(Uri.parse("${ApiEndpoints.baseUrl}/driver/get_available_orders.php"));
       _availableOrders = jsonDecode(res.body)['data'];
-    } catch (e) { print(e); }
+    } catch (e) { debugPrint(e.toString()); }
     _isLoading = false;
     notifyListeners();
   }

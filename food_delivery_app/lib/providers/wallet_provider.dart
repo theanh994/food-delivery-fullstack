@@ -30,7 +30,7 @@ class WalletProvider with ChangeNotifier {
         _balance = double.parse(data['balance'].toString());
         _transactions = data['transactions'];
       }
-    } catch (e) { print(e); }
+    } catch (e) { debugPrint(e.toString()); }
     _isLoading = false;
     notifyListeners();
   }
@@ -44,6 +44,6 @@ class WalletProvider with ChangeNotifier {
         _chartData = data['chart'];
         notifyListeners();
       }
-    } catch (e) { print(e); }
+    } catch (e) { debugPrint(e.toString()); }
   }
 }

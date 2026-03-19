@@ -30,7 +30,7 @@ class ChatProvider with ChangeNotifier {
         _messages = data['data'];
         notifyListeners();
       }
-    } catch (e) { print(e); }
+    } catch (e) { debugPrint(e.toString()); }
   }
 
   Future<void> sendMessage(int orderId, int senderId, String msg) async {

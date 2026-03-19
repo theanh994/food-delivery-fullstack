@@ -15,7 +15,10 @@ class _AddressBookScreenState extends State<AddressBookScreen> {
   void initState() {
     super.initState();
     final userId = context.read<AuthProvider>().currentUser!.id;
-    Future.microtask(() => context.read<AddressProvider>().fetchAddresses(userId));
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<AddressProvider>().fetchAddresses(userId);
+    });
   }
 
   @override

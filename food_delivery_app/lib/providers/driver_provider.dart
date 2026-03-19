@@ -20,7 +20,7 @@ class DriverProvider with ChangeNotifier {
       if (data['status'] == 'success') {
         _status = data['driver_status'];
       }
-    } catch (e) { print(e); }
+    } catch (e) { debugPrint(e.toString()); }
     _isLoading = false;
     notifyListeners();
   }

@@ -18,6 +18,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () {
+      if (!mounted) return;
       final driverId = context.read<AuthProvider>().currentUser!.id;
       context.read<WalletProvider>().fetchEarningsStats(driverId);
     });

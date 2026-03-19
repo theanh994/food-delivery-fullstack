@@ -32,6 +32,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
               onTap: () async {
                 final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
                 if (picked != null) setState(() => isLicense ? _licenseImage = File(picked.path) : _portraitImage = File(picked.path));
+                if (!context.mounted) return;
                 Navigator.pop(context);
               },
             ),
@@ -41,6 +42,7 @@ class _DriverRegistrationScreenState extends State<DriverRegistrationScreen> {
               onTap: () async {
                 final picked = await ImagePicker().pickImage(source: ImageSource.camera);
                 if (picked != null) setState(() => isLicense ? _licenseImage = File(picked.path) : _portraitImage = File(picked.path));
+                if (!context.mounted) return;
                 Navigator.pop(context);
               },
             ),

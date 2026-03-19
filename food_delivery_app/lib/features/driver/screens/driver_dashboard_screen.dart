@@ -124,7 +124,7 @@ class _DriverDashboardScreenState extends State<DriverDashboardScreen> {
                             
                             bool ok = await prov.acceptOrder(orderId, driverId);
                             
-                            if (!mounted) return; 
+                            if (!context.mounted) return; 
 
                             if (ok) {
                               AppNoti.show(context, "Đã nhận đơn thành công!", type: NotiType.success);

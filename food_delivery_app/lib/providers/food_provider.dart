@@ -71,7 +71,7 @@ class FoodProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      print("Error fetching menu: $e");
+      debugPrint("Error fetching menu: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
