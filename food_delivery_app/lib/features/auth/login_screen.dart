@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_noti.dart';
 import '../../providers/auth_provider.dart';
@@ -19,6 +20,22 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
   bool _obscurePassword = true;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials(); // Gọi hàm lấy dữ liệu khi mở app
+  }
+
+  // Hàm lấy dữ liệu đã lưu
+  void _loadSavedCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _emailController.text = prefs.getString('saved_email') ?? "";
+      _passwordController.text = prefs.getString('saved_password') ?? "";
+      _rememberMe = prefs.getBool('is_remembered') ?? false;
+    });
+  }
+
   // 2. Hàm xử lý Đăng nhập
   void _handleLogin() async {
     // Ẩn bàn phím
@@ -30,6 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     bool success = await authProvider.login(
       _emailController.text.trim(),
       _passwordController.text.trim(),
+       _rememberMe, 
     );
 
     if (mounted) {

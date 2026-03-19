@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../data/models/user_model.dart';
 import '../core/constants/api_endpoints.dart';
@@ -14,7 +15,7 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String email, String password, bool rememberMe) async {
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
@@ -37,6 +38,19 @@ class AuthProvider with ChangeNotifier {
         if (data['status'] == 'success') {
           // Chuyển JSON thành Model
           _currentUser = UserModel.fromJson(data['data']);
+          
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          if (rememberMe) {
+            await prefs.setString('saved_email', email);
+            await prefs.setString('saved_password', password);
+            await prefs.setBool('is_remembered', true);
+          } else {
+            // Nếu không tích thì xóa sạch dấu vết cũ
+            await prefs.remove('saved_email');
+            await prefs.remove('saved_password');
+            await prefs.setBool('is_remembered', false);
+          }
+
           updateFCMToken(_currentUser!.id); 
           _isLoading = false;
           notifyListeners();
@@ -167,9 +181,13 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  void logout() {
+  void logout() async {
     _currentUser = null;
-    _errorMessage = '';
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Khi logout thì thường vẫn giữ email đã lưu nhưng bắt nhập lại pass, 
+    // hoặc xóa hết tùy bạn. Ở đây tôi xóa hết cho an toàn:
+    await prefs.remove('saved_password'); 
+    await prefs.setBool('is_remembered', false);
     notifyListeners();
   }
 
