@@ -32,6 +32,7 @@ include 'includes/sidebar.php';
     <a href="orders.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Trở về</a>
     <div>
         <button onclick="window.print()" class="btn btn-success mr-2"><i class="fas fa-print"></i> Xuất Hóa Đơn (In)</button>
+        <button onclick="exportInvoiceToPDF()" class="btn btn-danger mr-2"><i class="fas fa-file-pdf"></i> Xuất PDF</button>
         <?php if(!in_array($order['status'], ['completed', 'cancelled'])): ?>
         <form method="POST" class="d-inline" onsubmit="return confirm('CẢNH BÁO: Hủy khẩn cấp sẽ hoàn tiền (nếu có) và đóng đơn hàng này lại?');">
             <button type="submit" name="force_cancel" class="btn btn-danger"><i class="fas fa-ban"></i> Hủy Đơn Khẩn Cấp</button>
@@ -135,5 +136,23 @@ include 'includes/sidebar.php';
 
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function exportInvoiceToPDF() {
+    const element = document.getElementById('invoice-area');
+    const orderId = '<?= $order['id'] ?>';
+    
+    const opt = {
+        margin:       10, // Margin in px
+        filename:     'HoaDon_EPC_' + orderId + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+}
+</script>
 
 <?php include 'includes/footer.php'; ?>
